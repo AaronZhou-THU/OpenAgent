@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Chat</title>
+
+  <!-- Anthropic brand fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- marked.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+
+  <!-- DOMPurify — sanitize HTML from markdown rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h1 class="logo">Agent Chat</h1>
+        <button id="new-chat-btn" title="New Chat">+ New Chat</button>
+      </div>
+      <div id="conversation-list" class="conversation-list"></div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main id="chat-area">
+      <!-- Chat Header -->
+      <header id="chat-header">
+        <div class="header-left">
+          <button id="sidebar-toggle" class="mobile-only" title="Toggle sidebar">&#9776;</button>
+          <h2 id="chat-title">Select a conversation</h2>
+        </div>
+        <div class="header-right">
+          <button id="teams-btn" class="header-toggle-btn hidden" title="Toggle Teams">
+            <span class="header-toggle-label">Teams</span>
+          </button>
+          <button id="approval-btn" class="header-toggle-btn hidden" title="Toggle Approval">
+            <span class="header-toggle-label">Approval</span>
+          </button>
+          <button id="plan-mode-btn" class="plan-mode-btn hidden" title="Toggle Plan Mode">
+            <span class="plan-mode-label">Plan</span>
+          </button>
+          <span id="connection-status" class="status-indicator disconnected" title="Disconnected">&#9679;</span>
+          <span id="token-usage" class="token-usage" title="Token usage"></span>
+        </div>
+      </header>
+
+      <!-- Messages -->
+      <div id="messages" class="messages">
+        <div id="welcome" class="welcome">
+          <h2>Welcome to Agent Chat</h2>
+          <p>Create a new conversation or select one from the sidebar to begin.</p>
+        </div>
+      </div>
+
+      <!-- Input Bar -->
+      <div id="input-bar" class="input-bar">
+        <textarea
+          id="message-input"
+          placeholder="Send a message..."
+          rows="1"
+          disabled
+        ></textarea>
+        <button id="cancel-btn" class="cancel-btn hidden" title="Stop agent">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"></rect>
+          </svg>
+        </button>
+        <button id="send-btn" disabled title="Send message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13"></path>
+            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- Preset Selector Overlay -->
+    <div id="preset-overlay" class="preset-overlay hidden">
+      <div class="preset-modal">
+        <h3>New conversation</h3>
+        <div id="preset-list" class="preset-list"></div>
+        <div class="preset-options">
+          <label class="toggle-option" title="Enable agent teammates for parallel work and team coordination">
+            <input type="checkbox" id="enable-teams-toggle">
+            <span class="toggle-label">Enable Teams</span>
+            <span class="toggle-desc">Spawn teammate agents for parallel work</span>
+          </label>
+          <label class="toggle-option" title="Stream raw LLM API request/response data to the dev panel">
+            <input type="checkbox" id="enable-tracing-toggle">
+            <span class="toggle-label">LLM Tracing</span>
+            <span class="toggle-desc">Show full API payloads in dev panel</span>
+          </label>
+          <label class="toggle-option" title="Pause before executing dangerous tools and wait for user approval">
+            <input type="checkbox" id="enable-approval-toggle">
+            <span class="toggle-label">Tool Approval</span>
+            <span class="toggle-desc">Review and approve tool calls before execution</span>
+          </label>
+          <label class="toggle-option" title="Agent explores and plans before executing">
+            <input type="checkbox" id="enable-plan-mode-toggle">
+            <span class="toggle-label">Plan Mode</span>
+            <span class="toggle-desc">Read-only exploration and planning before execution</span>
+          </label>
+        </div>
+        <button id="preset-create-btn" class="preset-create-btn">Create</button>
+      </div>
+    </div>
+
+    <!-- Plan Approval Overlay -->
+    <div id="plan-approval-overlay" class="plan-approval-overlay hidden">
+      <div class="plan-approval-modal">
+        <h3>Plan Ready for Review</h3>
+        <div id="plan-content" class="plan-content"></div>
+        <div class="plan-approval-actions">
+          <button id="plan-approve-btn" class="approval-btn approve-btn">Approve &amp; Execute</button>
+          <button id="plan-reject-btn" class="approval-btn deny-btn">Reject</button>
+        </div>
+        <div id="plan-feedback-section" class="plan-feedback-section hidden">
+          <textarea id="plan-feedback-input" placeholder="Provide feedback..." rows="3"></textarea>
+          <button id="plan-feedback-submit" class="approval-btn">Submit Feedback</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Todo Panel (slide-in overlay) -->
+    <aside id="todo-panel" class="todo-panel hidden">
+      <div class="todo-header">
+        <h3>Tasks</h3>
+        <button id="todo-close" title="Close">&times;</button>
+      </div>
+      <div id="todo-list" class="todo-list"></div>
+    </aside>
+  </div>
+
+  <!-- App modules -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

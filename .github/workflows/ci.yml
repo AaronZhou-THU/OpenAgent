@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-agent-api:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        working-directory: agent-api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: Lint with ruff
+        working-directory: agent-api
+        run: |
+          pip install ruff
+          ruff check src/ tests/
+          ruff format --check src/ tests/
+      - name: Type check with mypy
+        working-directory: agent-api
+        run: |
+          pip install mypy
+          mypy src/ --ignore-missing-imports || true
+      - name: Run tests
+        working-directory: agent-api
+        run: |
+          python -m pytest tests/ -v --tb=short
+
+  test-agent-cli:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install agent-api first (dependency)
+        working-directory: agent-api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Install agent-cli
+        working-directory: agent-cli
+        run: |
+          pip install -e ".[test]"
+      - name: Lint with ruff
+        working-directory: agent-cli
+        run: |
+          pip install ruff
+          ruff check src/ tests/
+          ruff format --check src/ tests/
+      - name: Run tests
+        working-directory: agent-cli
+        run: |
+          python -m pytest tests/ -v --tb=short
+
+  test-agent-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: agent-ui/package-lock.json
+      - name: Install dependencies
+        working-directory: agent-ui
+        run: npm ci
+      - name: Run tests
+        working-directory: agent-ui
+        run: npm test
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check for dependency vulnerabilities
+        run: |
+          pip install pip-audit
+          cd agent-api && pip install -e . && pip-audit || true
+          cd ../agent-cli && pip install -e . && pip-audit || true

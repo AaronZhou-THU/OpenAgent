@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing & coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Linting
+.mypy_cache/
+.ruff_cache/
+
+# Logs
+*.log
+
+# Database
+*.db
+
+# Workspace artifacts
+workspace/

@@ -1,0 +1,32 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [pydantic-settings>=2.6]
+        args: [--ignore-missing-imports]
+        pass_filenames: false
+        entry: mypy src/
+        files: ^(agent-api|agent-cli)/src/
+
+  - repo: local
+    hooks:
+      - id: pytest-agent-api
+        name: pytest (agent-api)
+        entry: bash -c 'cd agent-api && python -m pytest tests/ -q --tb=short'
+        language: system
+        pass_filenames: false
+        files: ^agent-api/
+      - id: pytest-agent-cli
+        name: pytest (agent-cli)
+        entry: bash -c 'cd agent-cli && python -m pytest tests/ -q --tb=short'
+        language: system
+        pass_filenames: false
+        files: ^agent-cli/

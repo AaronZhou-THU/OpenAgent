@@ -1,0 +1,53 @@
+name: Bug report
+description: Report a reproducible problem in OpenAgent
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - agent-api
+        - agent-cli
+        - agent-ui
+        - agent-user-ui
+        - docs
+        - reference material
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: Describe the failure and the observed behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest set of steps that reproduces the problem.
+      placeholder: |
+        1. Start ...
+        2. Run ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, Node version, provider, and any relevant config.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste relevant logs, trace output, or screenshots.
