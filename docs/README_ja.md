@@ -80,8 +80,8 @@ openagent
 
 OpenAgent は PyPI にも公開されています。
 
-- `openagent-core` — バックエンドライブラリ
-- `openagent-app` — ターミナルCLI
+- [`openagent-core`](https://pypi.org/project/openagent-core/) — バックエンドライブラリ
+- [`openagent-app`](https://pypi.org/project/openagent-app/) — ターミナルCLI
 
 モノレポをクローンせず、配布済みCLIだけ使いたい場合:
 

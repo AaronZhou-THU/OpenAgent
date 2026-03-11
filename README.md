@@ -81,8 +81,8 @@ Most AI agent projects are either too abstract for beginners or too closed to le
 
 OpenAgent is also published on PyPI:
 
-- `openagent-core` — backend library
-- `openagent-app` — terminal CLI
+- [`openagent-core`](https://pypi.org/project/openagent-core/) — backend library
+- [`openagent-app`](https://pypi.org/project/openagent-app/) — terminal CLI
 
 If you only want the packaged CLI instead of a monorepo checkout:
 

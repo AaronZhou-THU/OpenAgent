@@ -80,8 +80,8 @@ openagent
 
 OpenAgent는 PyPI에도 배포되어 있습니다.
 
-- `openagent-core` — 백엔드 라이브러리
-- `openagent-app` — 터미널 CLI
+- [`openagent-core`](https://pypi.org/project/openagent-core/) — 백엔드 라이브러리
+- [`openagent-app`](https://pypi.org/project/openagent-app/) — 터미널 CLI
 
 모노레포를 클론하지 않고 패키징된 CLI만 쓰고 싶다면:
 

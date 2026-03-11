@@ -13,8 +13,8 @@ pip install -e .
 
 The Python package split in this repository is:
 
-- `openagent-core` — backend library
-- `openagent-app` — terminal CLI
+- [`openagent-core`](https://pypi.org/project/openagent-core/) — backend library
+- [`openagent-app`](https://pypi.org/project/openagent-app/) — terminal CLI
 
 Install from PyPI when you only need the packaged artifacts:
 

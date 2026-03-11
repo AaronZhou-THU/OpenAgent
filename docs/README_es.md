@@ -80,8 +80,8 @@ openagent
 
 OpenAgent también está publicado en PyPI:
 
-- `openagent-core` — librería backend
-- `openagent-app` — CLI de terminal
+- [`openagent-core`](https://pypi.org/project/openagent-core/) — librería backend
+- [`openagent-app`](https://pypi.org/project/openagent-app/) — CLI de terminal
 
 Si solo quieres usar el CLI empaquetado y no clonar el monorepo:
 
