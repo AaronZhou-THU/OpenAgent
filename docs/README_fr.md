@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">OpenAgent</h1>
   <p align="center">
-    Un agent de programmation IA open source, pensé pour les débutants, afin d'apprendre comment les agents fonctionnent en le faisant tourner et en le modifiant soi-même.
+    Un agent de programmation IA source-available, pensé pour les débutants, afin d'apprendre comment les agents fonctionnent en le faisant tourner et en le modifiant soi-même.
   </p>
   <p align="center">
     <a href="#démarrage-rapide">Démarrage rapide</a> &bull;

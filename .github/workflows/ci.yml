@@ -32,7 +32,7 @@ jobs:
         working-directory: agent-api
         run: |
           pip install mypy
-          mypy src/ --ignore-missing-imports || true
+          mypy src/ --ignore-missing-imports
       - name: Run tests
         working-directory: agent-api
         run: |
@@ -84,6 +84,17 @@ jobs:
         working-directory: agent-ui
         run: npm test
 
+  test-agent-user-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run tests
+        working-directory: agent-user-ui
+        run: npm test
+
   security:
     runs-on: ubuntu-latest
     steps:
@@ -94,5 +105,5 @@ jobs:
       - name: Check for dependency vulnerabilities
         run: |
           pip install pip-audit
-          cd agent-api && pip install -e . && pip-audit || true
-          cd ../agent-cli && pip install -e . && pip-audit || true
+          cd agent-api && pip install -e . && pip-audit
+          cd ../agent-cli && pip install -e . && pip-audit

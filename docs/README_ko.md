@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">OpenAgent</h1>
   <p align="center">
-    직접 실행하고 고치면서 에이전트가 어떻게 동작하는지 배울 수 있는 초보자용 오픈소스 AI 코딩 에이전트입니다.
+    직접 실행하고 고치면서 에이전트가 어떻게 동작하는지 배울 수 있는 초보자용 소스 공개형 AI 코딩 에이전트입니다.
   </p>
   <p align="center">
     <a href="#빠른-시작">빠른 시작</a> &bull;

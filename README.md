@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">OpenAgent</h1>
   <p align="center">
-    A beginner-friendly open-source AI coding agent for learning how agents work by building and running one yourself.
+    A beginner-friendly, source-available AI coding agent for learning how agents work by building and running one yourself.
   </p>
   <p align="center">
     <a href="#quick-start">Quick Start</a> &bull;
@@ -53,7 +53,7 @@ Agent: [thinking] Let me explore the codebase first...
 ## Repository Scope
 
 This monorepo contains the OpenAgent runtime stack and the repo-governance files needed
-to publish and maintain it as an open-source project.
+to publish and maintain it as a source-available project.
 
 - Runtime projects: `agent-api/`, `agent-cli/`, `agent-ui/`, `agent-user-ui/`
 - Repo operations: `.github/`, `docs/`, `README.md`, `CONTRIBUTING.md`, `LICENSE`,
@@ -248,6 +248,9 @@ cd agent-cli && .venv/bin/python -m pytest tests/ -v
 # Developer UI
 cd agent-ui && npm test
 
+# User UI
+cd agent-user-ui && npm test
+
 # Lint + type check
 cd agent-api && .venv/bin/ruff check src/ tests/
 cd agent-cli && .venv/bin/ruff check src/ tests/
@@ -320,6 +323,7 @@ Please run the test suites before submitting (CI runs these automatically on PRs
 cd agent-api && .venv/bin/python -m pytest tests/ -v
 cd agent-cli && .venv/bin/python -m pytest tests/ -v
 cd agent-ui && npm test
+cd agent-user-ui && npm test
 ```
 
 You can also run all checks at once with pre-commit:
@@ -333,6 +337,11 @@ pre-commit run --all-files
 Business Source License 1.1 (BSL 1.1)
 
 See [LICENSE](LICENSE) for the Additional Use Grant, Change Date, and Change License.
+
+OpenAgent is source-available under BSL 1.1, not OSI open source.
+
+For commercial licensing inquiries, contact Walden AI Lab through the repository
+owner contact channel on the repository hosting platform.
 
 For security issues, use [SECURITY.md](SECURITY.md). For community expectations, use [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 

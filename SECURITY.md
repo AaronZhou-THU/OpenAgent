@@ -10,8 +10,8 @@ Do not open a public issue for suspected vulnerabilities.
 
 Use a private reporting channel instead:
 
-- If this repository is hosted on a platform with private vulnerability reporting, use that feature.
-- Otherwise, contact the maintainers privately before any public disclosure.
+- Preferred: use the repository host's private vulnerability reporting feature for this repository.
+- Otherwise, contact Walden AI Lab through the repository owner contact channel on the repository hosting profile before any public disclosure.
 
 Include the following in your report:
 

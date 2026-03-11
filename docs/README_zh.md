@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">OpenAgent</h1>
   <p align="center">
-    一个面向初学者的开源 AI 编程代理项目，让你通过亲手运行和修改代码来学习 Agent 的工作方式。
+    一个面向初学者、源码可见的 AI 编程代理项目，让你通过亲手运行和修改代码来学习 Agent 的工作方式。
   </p>
   <p align="center">
     <a href="#快速开始">快速开始</a> &bull;
