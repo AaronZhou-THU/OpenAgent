@@ -18,6 +18,11 @@ repos:
 
   - repo: local
     hooks:
+      - id: secret-scan
+        name: secret scan
+        entry: python scripts/check_secrets.py
+        language: system
+        files: .
       - id: pytest-agent-api
         name: pytest (agent-api)
         entry: bash -c 'cd agent-api && python -m pytest tests/ -q --tb=short'
