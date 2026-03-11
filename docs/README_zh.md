@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">OpenAgent</h1>
   <p align="center">
-    一个可以在本地运行、完全理解、自由扩展的开源 AI 编程代理。
+    一个面向初学者的开源 AI 编程代理项目，让你通过亲手运行和修改代码来学习 Agent 的工作方式。
   </p>
   <p align="center">
     <a href="#快速开始">快速开始</a> &bull;
@@ -24,7 +24,7 @@
 
 ## 这是什么？
 
-OpenAgent 是一个功能完整的 AI 编程代理——类似于 Claude Code、Cursor 或 Windsurf——你可以**在本地运行**、**阅读每一行代码**、并**随意修改**。
+OpenAgent 是一个面向初学者的 AI 编程代理项目，适合那些对现代 Agent 如何工作感到好奇的人。你可以**在本地运行它**、**阅读每一行代码**，并且**通过修改真实代码来学习**，而不是只看抽象图示。
 
 你输入一条消息，比如*"创建一个带认证功能的 REST API"*，代理会：
 
@@ -51,46 +51,50 @@ OpenAgent 是一个功能完整的 AI 编程代理——类似于 Claude Code、
 
 ## 为什么选择这个项目？
 
-大多数 AI 代理框架要么过于抽象（LangChain），要么过于封闭（Claude Code）。OpenAgent 的特点：
+大多数 AI 代理项目对初学者来说要么过于抽象，要么过于封闭。OpenAgent 的特点：
 
 - **可读性强** — 核心循环只有约 30 行。没有框架，没有黑魔法。
+- **教育友好** — 专为想通过动手实践理解 Agent 架构的初学者设计。
 - **功能完整** — Web UI、终端 CLI、流式输出、工具、记忆、团队、计划模式。
-- **教育友好** — 附带[新手友好指南](../HOW_IT_WORKS.md)和[视频课程大纲](../course-outline.md)。
-- **易于扩展** — 20 行代码添加新工具。更换一个适配器即可切换 LLM 提供商。
+- **文档完善** — 包含贡献指南、安全策略、翻译文档，以及面向组件的技术参考资料。
+- **模型无关** — 核心循环面向统一的 `LLMClient` 接口，而不是绑定某一家模型厂商。
+- **易于扩展** — 20 行代码添加新工具；新增或替换提供商适配器时无需重写核心循环。
 
 ## 安装
 
 ```bash
-pip install openagent-app
-export ANTHROPIC_API_KEY=你的密钥
+cd openagent
+python -m venv .venv && source .venv/bin/activate
+pip install -e agent-api -e agent-cli
 openagent
 ```
-
-PyPI 包：[`openagent-core`](https://pypi.org/project/openagent-core/)（后端库）· [`openagent-app`](https://pypi.org/project/openagent-app/)（CLI）
 
 ## 快速开始（开发）
 
 ### 前置条件
 
 - Python 3.11+（推荐 3.14）
-- [Anthropic API 密钥](https://console.anthropic.com/)
+- 你所选择的 LLM 提供商或兼容端点的凭据
 
 ### 方式1a：开发者 Web UI
 
 ```bash
-# 克隆仓库
-git clone https://github.com/anthropics/openagent.git
+# 克隆你的 fork 或本地副本
+git clone <your-fork-or-local-copy>
 cd openagent
 
 # 后端
 cd agent-api
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
-echo "ANTHROPIC_API_KEY=你的密钥" > .env
+cat > .env <<'EOF'
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=你的密钥
+EOF
 uvicorn agent_service.main:app --reload
 
 # 开发者前端（新终端）
-cd agent-ui
+cd /path/to/openagent/agent-ui
 python3 -m http.server 3500
 
 # 打开 http://localhost:3500
@@ -100,7 +104,7 @@ python3 -m http.server 3500
 
 ```bash
 # 后端启动方式同上，然后在新终端中：
-cd agent-user-ui
+cd /path/to/openagent/agent-user-ui
 python3 -m http.server 3501
 
 # 打开 http://localhost:3501
@@ -111,9 +115,9 @@ python3 -m http.server 3501
 ### 方式二：终端 CLI
 
 ```bash
-cd agent-cli
+cd openagent
 python -m venv .venv && source .venv/bin/activate
-pip install -e .
+pip install -e agent-api -e agent-cli
 openagent
 ```
 
@@ -180,20 +184,20 @@ echo "解释二分查找的原理" | openagent --no-approval
                   ├─────────────────┤
                   │   工具注册表     │  ◄── bash、文件、think、plan_mode、compact...
                   ├─────────────────┤
-                  │   LLM 客户端    │  ◄── 提供商无关（一个适配器即可切换）
+                  │   LLM 客户端    │  ◄── 提供商无关的适配器边界
                   └────────┬────────┘
                            ▼
                     ┌────────────┐
-                    │  Claude API │ （或任何 Anthropic 兼容 API）
+                    │  LLM 提供商 │ （任何已支持或兼容的后端）
                     └────────────┘
 ```
 
-完整架构图详见 [HOW_IT_WORKS.md](../HOW_IT_WORKS.md#the-complete-architecture)。
+更多后端架构细节见 [agent-api/README.md](../agent-api/README.md) 和 [agent-api/CLAUDE.md](../agent-api/CLAUDE.md)。
 
 ## 项目结构
 
 ```
-codingagents/
+openagent/
 ├── agent-api/          # FastAPI 后端 + 代理逻辑
 │   ├── src/agent_service/
 │   │   ├── main.py           # 应用入口
@@ -203,13 +207,13 @@ codingagents/
 │   │   └── api/websocket.py  # WebSocket 流式处理器
 │   ├── skills/               # SKILL.md 专家知识文件
 │   ├── prompts/              # PROMPT.md 系统提示预设
-│   └── tests/                # 236 个测试
+│   └── tests/                # 后端测试套件
 ├── agent-cli/          # 终端 CLI 界面
 │   ├── src/agent_cli/
 │   │   ├── app.py            # REPL 调度器
 │   │   ├── renderer.py       # Rich 终端输出
 │   │   └── commands.py       # 斜杠命令（/plan、/model 等）
-│   └── tests/                # 160 个测试
+│   └── tests/                # CLI 测试套件
 ├── agent-ui/           # 开发者 Web 前端（无需构建步骤）
 │   ├── index.html
 │   ├── css/styles.css
@@ -218,21 +222,28 @@ codingagents/
 │   ├── index.html
 │   ├── css/styles.css        # Forest Canopy 浅色主题
 │   └── js/                   # ES 模块（app、renderer、websocket 等）
-├── HOW_IT_WORKS.md     # 新手友好的架构指南
-├── course-outline.md   # YouTube 课程大纲（24 个视频）
-├── CONTRIBUTING.md     # 贡献指南
-├── LICENSE             # MIT 许可证
-└── .env.example        # 环境变量参考
+├── docs/                # 根 README 的多语言翻译
+├── .github/             # CI、Issue 模板、PR 模板
+├── HOW_IT_WORKS.md      # 运行时架构指南
+├── CONTRIBUTING.md      # 贡献指南
+├── CODE_OF_CONDUCT.md   # 社区行为准则
+├── SECURITY.md          # 漏洞披露策略
+├── LICENSE              # Business Source License 1.1
+├── .env.example         # 环境变量参考
+└── REMOTE-CONTROL.md    # 远程控制使用说明
 ```
 
 ## 测试
 
 ```bash
-# 后端（236 个测试，约 2 秒）
+# 后端
 cd agent-api && .venv/bin/python -m pytest tests/ -v
 
-# CLI（160 个测试，不到 1 秒）
+# CLI
 cd agent-cli && .venv/bin/python -m pytest tests/ -v
+
+# 开发者 UI
+cd agent-ui && npm test
 
 # 代码检查 + 类型检查
 cd agent-api && .venv/bin/ruff check src/ tests/
@@ -245,10 +256,13 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 
 | 变量 | 默认值 | 描述 |
 |------|--------|------|
-| `ANTHROPIC_API_KEY` | （必需） | 你的 Anthropic API 密钥 |
-| `ANTHROPIC_BASE_URL` | `https://api.anthropic.com` | API 端点（用于 DeepSeek、代理等） |
-| `MODEL` | `claude-sonnet-4-20250514` | 使用的模型 |
-| `WORKSPACE_DIR` | `./workspace` | 代理文件创建位置 |
+| `LLM_PROVIDER` | `anthropic` | 要使用的 LLM 后端（`anthropic` 或 `openai`） |
+| `ANTHROPIC_API_KEY` | （Anthropic 必需） | 你的 Anthropic API 密钥 |
+| `ANTHROPIC_BASE_URL` | 未设置 | 可选的 API 端点覆盖 |
+| `OPENAI_API_KEY` | （OpenAI 必需） | 你的 OpenAI API 密钥 |
+| `OPENAI_BASE_URL` | 未设置 | 可选的 OpenAI 兼容端点 |
+| `MODEL` | `claude-sonnet-4-5-20250929` | 默认模型 |
+| `WORKSPACE_DIR` | `workspace` | 代理文件创建位置 |
 | `ENABLE_MEMORY` | `true` | 跨会话记忆 |
 | `MAX_TURNS` | `50` | 代理循环最大迭代次数 |
 | `MAX_TOKEN_BUDGET` | `200000` | 每次会话的 token 消耗上限 |
@@ -257,21 +271,28 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 ### 使用其他 LLM 提供商
 
 ```bash
-# DeepSeek（便宜、快速）
+# OpenAI
+LLM_PROVIDER=openai OPENAI_API_KEY=你的密钥 MODEL=gpt-4.1
+
+# Anthropic 兼容端点
 ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
 
-# 使用 Ollama 本地运行（免费）
-# 需要 Anthropic 兼容代理
+# 其他兼容后端
+# 在 agent-api/src/agent_service/agent/llm.py 中实现或扩展适配层
 ```
 
 ## 文档
 
 | 文档 | 受众 | 描述 |
 |------|------|------|
-| [HOW_IT_WORKS.md](../HOW_IT_WORKS.md) | 初学者 | 包含图表的可视化组件指南 |
+| [README.md](../README.md) | 所有人 | 产品概览、安装、测试和配置 |
+| [HOW_IT_WORKS.md](../HOW_IT_WORKS.md) | 贡献者 | 运行时架构详解 |
+| [REPOSITORY.md](REPOSITORY.md) | 贡献者 | 单体仓库结构与维护说明 |
 | [CLAUDE.md](../agent-api/CLAUDE.md) | AI 代理 / 开发者 | 全面的技术参考 |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | 贡献者 | 分支命名、提交格式、PR 检查清单 |
-| [course-outline.md](../course-outline.md) | 教育者 | 24 个视频的 YouTube 课程计划 |
+| [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) | 社区 | 行为规范与执行流程 |
+| [SECURITY.md](../SECURITY.md) | 安全研究人员 | 私密漏洞披露指引 |
+| [REMOTE-CONTROL.md](../REMOTE-CONTROL.md) | 运维人员 | 远程控制设置与运维说明 |
 | [.env.example](../.env.example) | 运维人员 | 所有环境变量及其描述 |
 
 ## 参与贡献
@@ -290,6 +311,7 @@ ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
 ```bash
 cd agent-api && .venv/bin/python -m pytest tests/ -v
 cd agent-cli && .venv/bin/python -m pytest tests/ -v
+cd agent-ui && npm test
 ```
 
 你也可以使用 pre-commit 一次性运行所有检查：
@@ -300,8 +322,10 @@ pre-commit run --all-files
 
 ## 许可证
 
-MIT
+Business Source License 1.1（BSL 1.1）
+
+详细条款、变更日期与后续变更许可证见 [LICENSE](../LICENSE)。
 
 ## 致谢
 
-基于 [Anthropic Claude API](https://docs.anthropic.com/) 构建。本项目的设计模式借鉴了 [Claude Code](https://docs.anthropic.com/en/docs/claude-code)，反映了真实的生产级代理系统架构。
+这是一个面向初学者的“边做边学”参考实现，采用接近生产环境的 Agent 模式，并通过提供商无关的 LLM 适配层保持灵活性。

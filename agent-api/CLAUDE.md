@@ -293,7 +293,7 @@ pre-commit run --all-files
 - **Linting**: `[tool.ruff]` config in both `pyproject.toml` files (line-length 120, Python 3.11 target)
 - **Type checking**: `[tool.mypy]` config in both `pyproject.toml` files (warn_return_any, warn_unused_configs)
 - **Dependency pinning**: All dependencies in both packages have upper bounds (e.g., `fastapi>=0.115,<1.0`)
-- **Project files**: `CONTRIBUTING.md` (branch naming, commit format, PR checklist), `LICENSE` (MIT), `.env.example` (all env vars documented)
+- **Project files**: `CONTRIBUTING.md` (branch naming, commit format, PR checklist), `LICENSE` (Business Source License 1.1), `.env.example` (all env vars documented)
 
 ### Manual smoke tests
 

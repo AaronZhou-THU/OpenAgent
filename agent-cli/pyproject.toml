@@ -4,14 +4,13 @@ version = "0.1.0"
 description = "Terminal interface for OpenAgent"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { text = "Business Source License 1.1" }
 authors = [{ name = "OpenAgent contributors" }]
 keywords = ["agent", "ai", "cli", "coding-agent", "terminal"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">OpenAgent</h1>
   <p align="center">
-    Un agente de programación IA de código abierto que puedes ejecutar localmente, entender completamente y extender a tu gusto.
+    Un agente de programación IA open source, pensado para principiantes, con el que puedes aprender cómo funcionan los agentes ejecutándolo y modificándolo tú mismo.
   </p>
   <p align="center">
     <a href="#inicio-rápido">Inicio rápido</a> &bull;
@@ -24,7 +24,7 @@
 
 ## ¿Qué es esto?
 
-OpenAgent es un agente de programación IA completamente funcional — similar a Claude Code, Cursor o Windsurf — que puedes **ejecutar localmente**, **leer cada línea de código** y **modificar como quieras**.
+OpenAgent es un proyecto de agente de programación IA pensado para principiantes con curiosidad por entender cómo funcionan los agentes modernos. Puedes **ejecutarlo localmente**, **leer cada línea de código** y **aprender cambiando código real**, no solo mirando diagramas.
 
 Escribes un mensaje como *"Crea una API REST con autenticación"*, y el agente:
 
@@ -51,46 +51,50 @@ Agente: [pensando] Déjame explorar el código primero...
 
 ## ¿Por qué este proyecto?
 
-La mayoría de los frameworks de agentes IA son demasiado abstractos (LangChain) o demasiado cerrados (Claude Code). OpenAgent es:
+La mayoría de los proyectos de agentes IA son demasiado abstractos para principiantes o demasiado cerrados para aprender bien de ellos. OpenAgent es:
 
 - **Legible** — el bucle principal tiene ~30 líneas. Sin frameworks, sin magia.
+- **Educativo** — diseñado para principiantes que quieren aprender arquitectura de agentes ejecutándola, trazándola y modificándola.
 - **Completo** — Web UI, CLI de terminal, streaming, herramientas, memoria, equipos, modo plan.
-- **Educativo** — incluye una [guía para principiantes](../HOW_IT_WORKS.md) y un [plan de curso en video](../course-outline.md).
-- **Extensible** — agrega una herramienta nueva en 20 líneas. Cambia el proveedor LLM con un solo adaptador.
+- **Bien documentado** — incluye guía de contribución, política de seguridad, traducciones y referencias técnicas por componente.
+- **Independiente del LLM** — el bucle principal trabaja contra una interfaz `LLMClient` compartida en lugar de depender de un proveedor único.
+- **Extensible** — agrega una herramienta nueva en 20 líneas. Cambia o añade adaptadores de proveedor sin reescribir el bucle.
 
 ## Instalación
 
 ```bash
-pip install openagent-app
-export ANTHROPIC_API_KEY=tu-clave
+cd openagent
+python -m venv .venv && source .venv/bin/activate
+pip install -e agent-api -e agent-cli
 openagent
 ```
-
-Paquetes PyPI: [`openagent-core`](https://pypi.org/project/openagent-core/) (librería backend) · [`openagent-app`](https://pypi.org/project/openagent-app/) (CLI)
 
 ## Inicio rápido (desarrollo)
 
 ### Prerrequisitos
 
 - Python 3.11+ (3.14 recomendado)
-- [Clave API de Anthropic](https://console.anthropic.com/)
+- Credenciales de tu proveedor LLM elegido o de un endpoint compatible
 
 ### Opción 1a: Developer Web UI
 
 ```bash
-# Clonar el repositorio
-git clone https://github.com/anthropics/openagent.git
+# Clona tu fork o copia local
+git clone <your-fork-or-local-copy>
 cd openagent
 
 # Backend
 cd agent-api
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
-echo "ANTHROPIC_API_KEY=tu-clave-aquí" > .env
+cat > .env <<'EOF'
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=tu-clave-aquí
+EOF
 uvicorn agent_service.main:app --reload
 
 # Frontend para desarrolladores (nueva terminal)
-cd agent-ui
+cd /path/to/openagent/agent-ui
 python3 -m http.server 3500
 
 # Abrir http://localhost:3500
@@ -100,7 +104,7 @@ python3 -m http.server 3500
 
 ```bash
 # Mismo backend que arriba, luego en una nueva terminal:
-cd agent-user-ui
+cd /path/to/openagent/agent-user-ui
 python3 -m http.server 3501
 
 # Abrir http://localhost:3501
@@ -111,9 +115,9 @@ La User UI es una interfaz más liviana orientada al usuario, con un tema claro 
 ### Opción 2: CLI de terminal
 
 ```bash
-cd agent-cli
+cd openagent
 python -m venv .venv && source .venv/bin/activate
-pip install -e .
+pip install -e agent-api -e agent-cli
 openagent
 ```
 
@@ -180,20 +184,20 @@ echo "Explica cómo funciona la búsqueda binaria" | openagent --no-approval
                   ├─────────────────┤
                   │  Registro tools  │  ◄── bash, archivos, think, plan_mode, compact...
                   ├─────────────────┤
-                  │  Cliente LLM     │  ◄── agnóstico al proveedor (cambiar con un adaptador)
+                  │  Cliente LLM     │  ◄── frontera de adaptadores independiente del proveedor
                   └────────┬────────┘
                            ▼
                     ┌────────────┐
-                    │  Claude API │  (o cualquier API compatible con Anthropic)
+                    │ Proveedor LLM │  (cualquier backend soportado o compatible)
                     └────────────┘
 ```
 
-El diagrama completo de arquitectura con todos los subsistemas se encuentra en [HOW_IT_WORKS.md](../HOW_IT_WORKS.md#the-complete-architecture).
+Más detalles de la arquitectura backend están en [agent-api/README.md](../agent-api/README.md) y [agent-api/CLAUDE.md](../agent-api/CLAUDE.md).
 
 ## Estructura del proyecto
 
 ```
-codingagents/
+openagent/
 ├── agent-api/          # Backend FastAPI + lógica del agente
 │   ├── src/agent_service/
 │   │   ├── main.py           # Punto de entrada de la app
@@ -203,13 +207,13 @@ codingagents/
 │   │   └── api/websocket.py  # Manejador de streaming WebSocket
 │   ├── skills/               # Archivos SKILL.md de conocimiento experto
 │   ├── prompts/              # Presets de system prompt PROMPT.md
-│   └── tests/                # 236 tests
+│   └── tests/                # Suite de tests del backend
 ├── agent-cli/          # Interfaz CLI de terminal
 │   ├── src/agent_cli/
 │   │   ├── app.py            # Orquestador del REPL
 │   │   ├── renderer.py       # Salida enriquecida de terminal
 │   │   └── commands.py       # Comandos slash (/plan, /model, etc.)
-│   └── tests/                # 160 tests
+│   └── tests/                # Suite de tests del CLI
 ├── agent-ui/           # Frontend web para desarrolladores (sin paso de compilación)
 │   ├── index.html
 │   ├── css/styles.css
@@ -218,21 +222,28 @@ codingagents/
 │   ├── index.html
 │   ├── css/styles.css        # Tema claro Forest Canopy
 │   └── js/                   # Módulos ES (app, renderer, websocket, etc.)
-├── HOW_IT_WORKS.md     # Guía de arquitectura para principiantes
-├── course-outline.md   # Plan de curso YouTube (24 videos)
-├── CONTRIBUTING.md     # Guía de contribución
-├── LICENSE             # Licencia MIT
-└── .env.example        # Referencia de variables de entorno
+├── docs/                # Traducciones del README principal
+├── .github/             # CI, plantillas de issues y PR
+├── HOW_IT_WORKS.md      # Guía de arquitectura del runtime
+├── CONTRIBUTING.md      # Guía de contribución
+├── CODE_OF_CONDUCT.md   # Expectativas de la comunidad
+├── SECURITY.md          # Política de divulgación de vulnerabilidades
+├── LICENSE              # Business Source License 1.1
+├── .env.example         # Referencia de variables de entorno
+└── REMOTE-CONTROL.md    # Notas operativas de control remoto
 ```
 
 ## Testing
 
 ```bash
-# Backend (236 tests, ~2s)
+# Backend
 cd agent-api && .venv/bin/python -m pytest tests/ -v
 
-# CLI (160 tests, <1s)
+# CLI
 cd agent-cli && .venv/bin/python -m pytest tests/ -v
+
+# Developer UI
+cd agent-ui && npm test
 
 # Lint + verificación de tipos
 cd agent-api && .venv/bin/ruff check src/ tests/
@@ -245,10 +256,13 @@ Las variables de entorno se configuran en `agent-api/.env`:
 
 | Variable | Valor por defecto | Descripción |
 |----------|-------------------|-------------|
-| `ANTHROPIC_API_KEY` | (requerido) | Tu clave API de Anthropic |
-| `ANTHROPIC_BASE_URL` | `https://api.anthropic.com` | Endpoint de la API (usar para DeepSeek, proxies, etc.) |
-| `MODEL` | `claude-sonnet-4-20250514` | Modelo a utilizar |
-| `WORKSPACE_DIR` | `./workspace` | Directorio donde el agente crea archivos |
+| `LLM_PROVIDER` | `anthropic` | Backend LLM a usar (`anthropic` o `openai`) |
+| `ANTHROPIC_API_KEY` | (requerido para Anthropic) | Tu clave API de Anthropic |
+| `ANTHROPIC_BASE_URL` | no definido | Override opcional del endpoint API |
+| `OPENAI_API_KEY` | (requerido para OpenAI) | Tu clave API de OpenAI |
+| `OPENAI_BASE_URL` | no definido | Endpoint opcional compatible con OpenAI |
+| `MODEL` | `claude-sonnet-4-5-20250929` | Modelo por defecto |
+| `WORKSPACE_DIR` | `workspace` | Directorio donde el agente crea archivos |
 | `ENABLE_MEMORY` | `true` | Memoria entre sesiones |
 | `MAX_TURNS` | `50` | Máximo de iteraciones del bucle del agente |
 | `MAX_TOKEN_BUDGET` | `200000` | Límite de gasto de tokens por sesión |
@@ -257,21 +271,28 @@ Las variables de entorno se configuran en `agent-api/.env`:
 ### Uso de proveedores LLM alternativos
 
 ```bash
-# DeepSeek (económico, rápido)
+# OpenAI
+LLM_PROVIDER=openai OPENAI_API_KEY=tu-clave MODEL=gpt-4.1
+
+# Endpoint compatible con Anthropic
 ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
 
-# Local con Ollama (gratis)
-# Requiere un proxy compatible con Anthropic
+# Cualquier otro backend compatible
+# Implementa o amplía la capa de adaptadores en agent-api/src/agent_service/agent/llm.py
 ```
 
 ## Documentación
 
 | Documento | Audiencia | Descripción |
 |-----------|-----------|-------------|
-| [HOW_IT_WORKS.md](../HOW_IT_WORKS.md) | Principiantes | Guía visual de componentes con diagramas |
+| [README.md](../README.md) | Todos | Visión general del producto, setup, tests y configuración |
+| [HOW_IT_WORKS.md](../HOW_IT_WORKS.md) | Colaboradores | Recorrido de la arquitectura del runtime |
+| [REPOSITORY.md](REPOSITORY.md) | Colaboradores | Diseño del monorepo y notas para mantenedores |
 | [CLAUDE.md](../agent-api/CLAUDE.md) | Agentes IA / desarrolladores | Referencia técnica completa |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Colaboradores | Convenciones de ramas, formato de commits, checklist de PRs |
-| [course-outline.md](../course-outline.md) | Educadores | Plan de curso YouTube de 24 videos |
+| [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) | Comunidad | Comportamiento esperado y proceso de aplicación |
+| [SECURITY.md](../SECURITY.md) | Investigadores de seguridad | Guía para reportar vulnerabilidades en privado |
+| [REMOTE-CONTROL.md](../REMOTE-CONTROL.md) | Operadores | Configuración y notas operativas de control remoto |
 | [.env.example](../.env.example) | Operadores | Todas las variables de entorno con descripciones |
 
 ## Contribuir
@@ -290,6 +311,7 @@ Por favor ejecuta los tests antes de enviar (CI los ejecuta automáticamente en 
 ```bash
 cd agent-api && .venv/bin/python -m pytest tests/ -v
 cd agent-cli && .venv/bin/python -m pytest tests/ -v
+cd agent-ui && npm test
 ```
 
 También puedes ejecutar todas las verificaciones a la vez con pre-commit:
@@ -300,8 +322,10 @@ pre-commit run --all-files
 
 ## Licencia
 
-MIT
+Business Source License 1.1 (BSL 1.1)
+
+Consulta [LICENSE](../LICENSE) para el Additional Use Grant, la Change Date y la Change License.
 
 ## Agradecimientos
 
-Construido con la [API de Anthropic Claude](https://docs.anthropic.com/). Inspirado en [Claude Code](https://docs.anthropic.com/en/docs/claude-code), los patrones de este proyecto reflejan sistemas de agentes de producción reales.
+Construido como una implementación de referencia para aprender haciendo, con patrones de agentes cercanos a producción y una capa de adaptadores LLM independiente del proveedor.

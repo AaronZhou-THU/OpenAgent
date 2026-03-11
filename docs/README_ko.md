@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">OpenAgent</h1>
   <p align="center">
-    로컬에서 실행하고, 완전히 이해하고, 자유롭게 확장할 수 있는 오픈소스 AI 코딩 에이전트.
+    직접 실행하고 고치면서 에이전트가 어떻게 동작하는지 배울 수 있는 초보자용 오픈소스 AI 코딩 에이전트입니다.
   </p>
   <p align="center">
     <a href="#빠른-시작">빠른 시작</a> &bull;
@@ -24,7 +24,7 @@
 
 ## 이것은 무엇인가요?
 
-OpenAgent는 Claude Code, Cursor, Windsurf와 유사한 완전한 기능의 AI 코딩 에이전트입니다. **로컬에서 실행**하고, **모든 코드를 읽고**, **원하는 대로 수정**할 수 있습니다.
+OpenAgent는 현대적인 에이전트가 어떻게 동작하는지 궁금한 초보자를 위한 AI 코딩 에이전트 프로젝트입니다. **로컬에서 실행**하고, **모든 코드를 읽고**, **실제 코드를 바꿔 보면서 배울 수 있습니다**.
 
 *"인증 기능이 있는 REST API 만들어줘"*라고 메시지를 입력하면, 에이전트는:
 
@@ -51,46 +51,50 @@ OpenAgent는 Claude Code, Cursor, Windsurf와 유사한 완전한 기능의 AI �
 
 ## 왜 이 프로젝트인가요?
 
-대부분의 AI 에이전트 프레임워크는 너무 추상적이거나(LangChain) 너무 폐쇄적입니다(Claude Code). OpenAgent는:
+대부분의 AI 에이전트 프로젝트는 초보자에게 너무 추상적이거나 너무 폐쇄적입니다. OpenAgent는:
 
 - **읽기 쉽습니다** — 핵심 루프는 약 30줄. 프레임워크도, 마법도 없습니다.
+- **학습용입니다** — 실행하고 추적하고 수정하면서 에이전트 구조를 이해하고 싶은 초보자를 위해 설계했습니다.
 - **완전합니다** — Web UI, 터미널 CLI, 스트리밍, 도구, 메모리, 팀, 플랜 모드.
-- **교육적입니다** — [초보자 가이드](../HOW_IT_WORKS.md)와 [영상 강좌 개요](../course-outline.md) 포함.
-- **확장 가능합니다** — 20줄로 새 도구 추가. 어댑터 하나만 바꾸면 LLM 제공업체 교체.
+- **문서가 충분합니다** — 기여 가이드, 보안 정책, 번역 문서, 컴포넌트별 기술 참고 자료를 포함합니다.
+- **LLM 독립적입니다** — 핵심 루프는 특정 벤더가 아니라 공통 `LLMClient` 인터페이스를 기준으로 동작합니다.
+- **확장 가능합니다** — 20줄로 새 도구를 추가할 수 있고, 제공업체 어댑터를 바꿔도 루프 자체는 다시 쓰지 않습니다.
 
 ## 설치
 
 ```bash
-pip install openagent-app
-export ANTHROPIC_API_KEY=당신의키
+cd openagent
+python -m venv .venv && source .venv/bin/activate
+pip install -e agent-api -e agent-cli
 openagent
 ```
-
-PyPI 패키지: [`openagent-core`](https://pypi.org/project/openagent-core/) (백엔드 라이브러리) · [`openagent-app`](https://pypi.org/project/openagent-app/) (CLI)
 
 ## 빠른 시작 (개발)
 
 ### 사전 요구 사항
 
 - Python 3.11+ (3.14 권장)
-- [Anthropic API 키](https://console.anthropic.com/)
+- 선택한 LLM 제공업체 또는 호환 엔드포인트의 자격 증명
 
 ### 방법 1a: 개발자 Web UI
 
 ```bash
-# 레포지토리 클론
-git clone https://github.com/anthropics/openagent.git
+# 포크 또는 로컬 복사본 클론
+git clone <your-fork-or-local-copy>
 cd openagent
 
 # 백엔드
 cd agent-api
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
-echo "ANTHROPIC_API_KEY=여기에-키-입력" > .env
+cat > .env <<'EOF'
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=여기에-키-입력
+EOF
 uvicorn agent_service.main:app --reload
 
 # 개발자 프론트엔드 (새 터미널)
-cd agent-ui
+cd /path/to/openagent/agent-ui
 python3 -m http.server 3500
 
 # http://localhost:3500 열기
@@ -100,7 +104,7 @@ python3 -m http.server 3500
 
 ```bash
 # 위와 동일한 백엔드를 실행한 후, 새 터미널에서:
-cd agent-user-ui
+cd /path/to/openagent/agent-user-ui
 python3 -m http.server 3501
 
 # http://localhost:3501 열기
@@ -111,9 +115,9 @@ python3 -m http.server 3501
 ### 방법 2: 터미널 CLI
 
 ```bash
-cd agent-cli
+cd openagent
 python -m venv .venv && source .venv/bin/activate
-pip install -e .
+pip install -e agent-api -e agent-cli
 openagent
 ```
 
@@ -180,20 +184,20 @@ echo "이진 탐색이 어떻게 작동하는지 설명해줘" | openagent --no-
                   ├─────────────────┤
                   │  도구 레지스트리 │  ◄── bash, 파일, think, plan_mode, compact...
                   ├─────────────────┤
-                  │  LLM 클라이언트  │  ◄── 제공업체 무관 (어댑터 하나로 교체)
+                  │  LLM 클라이언트  │  ◄── 제공업체 독립 어댑터 경계
                   └────────┬────────┘
                            ▼
                     ┌────────────┐
-                    │  Claude API │ (또는 Anthropic 호환 API)
+                    │ LLM 제공업체 │ (지원되거나 호환되는 모든 백엔드)
                     └────────────┘
 ```
 
-전체 아키텍처 다이어그램과 모든 하위 시스템은 [HOW_IT_WORKS.md](../HOW_IT_WORKS.md#the-complete-architecture)에서 확인할 수 있습니다.
+백엔드 아키텍처 상세 내용은 [agent-api/README.md](../agent-api/README.md)와 [agent-api/CLAUDE.md](../agent-api/CLAUDE.md)를 참고하세요.
 
 ## 프로젝트 구조
 
 ```
-codingagents/
+openagent/
 ├── agent-api/          # FastAPI 백엔드 + 에이전트 로직
 │   ├── src/agent_service/
 │   │   ├── main.py           # 앱 엔트리포인트
@@ -203,13 +207,13 @@ codingagents/
 │   │   └── api/websocket.py  # WebSocket 스트리밍 핸들러
 │   ├── skills/               # SKILL.md 전문 지식 파일
 │   ├── prompts/              # PROMPT.md 시스템 프롬프트 프리셋
-│   └── tests/                # 236개 테스트
+│   └── tests/                # 백엔드 테스트 스위트
 ├── agent-cli/          # 터미널 CLI 인터페이스
 │   ├── src/agent_cli/
 │   │   ├── app.py            # REPL 오케스트레이터
 │   │   ├── renderer.py       # Rich 터미널 출력
 │   │   └── commands.py       # 슬래시 명령어 (/plan, /model 등)
-│   └── tests/                # 160개 테스트
+│   └── tests/                # CLI 테스트 스위트
 ├── agent-ui/           # 개발자 웹 프론트엔드 (빌드 단계 없음)
 │   ├── index.html
 │   ├── css/styles.css
@@ -218,21 +222,28 @@ codingagents/
 │   ├── index.html
 │   ├── css/styles.css        # Forest Canopy 라이트 테마
 │   └── js/                   # ES 모듈 (app, renderer, websocket 등)
-├── HOW_IT_WORKS.md     # 초보자 친화적 아키텍처 가이드
-├── course-outline.md   # YouTube 강좌 개요 (24개 영상)
-├── CONTRIBUTING.md     # 기여 가이드라인
-├── LICENSE             # MIT 라이선스
-└── .env.example        # 환경 변수 참조
+├── docs/                # 루트 README 번역본
+├── .github/             # CI, 이슈 템플릿, PR 템플릿
+├── HOW_IT_WORKS.md      # 런타임 아키텍처 가이드
+├── CONTRIBUTING.md      # 기여 가이드라인
+├── CODE_OF_CONDUCT.md   # 커뮤니티 행동 기준
+├── SECURITY.md          # 취약점 공개 정책
+├── LICENSE              # Business Source License 1.1
+├── .env.example         # 환경 변수 참조
+└── REMOTE-CONTROL.md    # 원격 제어 운영 메모
 ```
 
 ## 테스트
 
 ```bash
-# 백엔드 (236개 테스트, ~2초)
+# 백엔드
 cd agent-api && .venv/bin/python -m pytest tests/ -v
 
-# CLI (160개 테스트, <1초)
+# CLI
 cd agent-cli && .venv/bin/python -m pytest tests/ -v
+
+# 개발자 UI
+cd agent-ui && npm test
 
 # 린트 + 타입 검사
 cd agent-api && .venv/bin/ruff check src/ tests/
@@ -245,10 +256,13 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
-| `ANTHROPIC_API_KEY` | (필수) | Anthropic API 키 |
-| `ANTHROPIC_BASE_URL` | `https://api.anthropic.com` | API 엔드포인트 (DeepSeek, 프록시 등에 사용) |
-| `MODEL` | `claude-sonnet-4-20250514` | 사용할 모델 |
-| `WORKSPACE_DIR` | `./workspace` | 에이전트가 파일을 생성하는 위치 |
+| `LLM_PROVIDER` | `anthropic` | 사용할 LLM 백엔드 (`anthropic` 또는 `openai`) |
+| `ANTHROPIC_API_KEY` | (Anthropic 사용 시 필수) | Anthropic API 키 |
+| `ANTHROPIC_BASE_URL` | 미설정 | 선택적 API 엔드포인트 오버라이드 |
+| `OPENAI_API_KEY` | (OpenAI 사용 시 필수) | OpenAI API 키 |
+| `OPENAI_BASE_URL` | 미설정 | 선택적 OpenAI 호환 엔드포인트 |
+| `MODEL` | `claude-sonnet-4-5-20250929` | 기본 모델 |
+| `WORKSPACE_DIR` | `workspace` | 에이전트가 파일을 생성하는 위치 |
 | `ENABLE_MEMORY` | `true` | 세션 간 메모리 |
 | `MAX_TURNS` | `50` | 에이전트 루프 최대 반복 횟수 |
 | `MAX_TOKEN_BUDGET` | `200000` | 세션당 토큰 사용 한도 |
@@ -257,21 +271,28 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 ### 대체 LLM 제공업체 사용
 
 ```bash
-# DeepSeek (저렴, 빠름)
+# OpenAI
+LLM_PROVIDER=openai OPENAI_API_KEY=당신의키 MODEL=gpt-4.1
+
+# Anthropic 호환 엔드포인트
 ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
 
-# Ollama로 로컬 실행 (무료)
-# Anthropic 호환 프록시 필요
+# 기타 호환 백엔드
+# agent-api/src/agent_service/agent/llm.py 에서 어댑터 계층을 구현하거나 확장
 ```
 
 ## 문서
 
 | 문서 | 대상 | 설명 |
 |------|------|------|
-| [HOW_IT_WORKS.md](../HOW_IT_WORKS.md) | 초보자 | 다이어그램이 포함된 시각적 컴포넌트 가이드 |
+| [README.md](../README.md) | 모두 | 제품 개요, 설치, 테스트, 설정 |
+| [HOW_IT_WORKS.md](../HOW_IT_WORKS.md) | 기여자 | 런타임 아키텍처 상세 설명 |
+| [REPOSITORY.md](REPOSITORY.md) | 기여자 | 모노레포 구조와 유지보수 메모 |
 | [CLAUDE.md](../agent-api/CLAUDE.md) | AI 에이전트 / 개발자 | 포괄적인 기술 레퍼런스 |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | 기여자 | 브랜치 명명, 커밋 형식, PR 체크리스트 |
-| [course-outline.md](../course-outline.md) | 교육자 | 24개 영상 YouTube 강좌 계획 |
+| [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) | 커뮤니티 | 기대 행동과 운영 절차 |
+| [SECURITY.md](../SECURITY.md) | 보안 연구자 | 비공개 취약점 제보 안내 |
+| [REMOTE-CONTROL.md](../REMOTE-CONTROL.md) | 운영자 | 원격 제어 설정과 운영 메모 |
 | [.env.example](../.env.example) | 운영자 | 설명이 포함된 모든 환경 변수 |
 
 ## 기여하기
@@ -290,6 +311,7 @@ ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
 ```bash
 cd agent-api && .venv/bin/python -m pytest tests/ -v
 cd agent-cli && .venv/bin/python -m pytest tests/ -v
+cd agent-ui && npm test
 ```
 
 pre-commit으로 모든 검사를 한 번에 실행할 수도 있습니다:
@@ -300,8 +322,10 @@ pre-commit run --all-files
 
 ## 라이선스
 
-MIT
+Business Source License 1.1 (BSL 1.1)
+
+추가 사용 허가, 변경 날짜, 변경 라이선스는 [LICENSE](../LICENSE)를 참고하세요.
 
 ## 감사의 말
 
-[Anthropic Claude API](https://docs.anthropic.com/)로 구축. [Claude Code](https://docs.anthropic.com/en/docs/claude-code)에서 영감을 받아, 실제 프로덕션 에이전트 시스템의 패턴을 반영합니다.
+초보자를 위한 learn-by-doing 참조 구현으로, 실제 운영에 가까운 에이전트 패턴과 제공업체 독립적인 LLM 어댑터 계층을 함께 제공합니다.

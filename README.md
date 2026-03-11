@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">OpenAgent</h1>
   <p align="center">
-    An open-source AI coding agent you can run locally, understand completely, and extend yourself.
+    A beginner-friendly open-source AI coding agent for learning how agents work by building and running one yourself.
   </p>
   <p align="center">
     <a href="#quick-start">Quick Start</a> &bull;
@@ -25,7 +25,7 @@
 
 ## What Is This?
 
-OpenAgent is a fully functional AI coding agent — similar to Claude Code, Cursor, or Windsurf — that you can **run locally**, **read every line of**, and **modify however you want**.
+OpenAgent is a beginner-first AI coding agent project for people who are curious how modern agents work. You can **run it locally**, **read every line of it**, and **learn by changing real code instead of studying abstract diagrams**.
 
 You type a message like *"Create a REST API with authentication"*, and the agent:
 
@@ -61,19 +61,21 @@ to publish and maintain it as an open-source project.
 
 ## Why This Project?
 
-Most AI agent frameworks are either too abstract (LangChain) or too closed (Claude Code). OpenAgent is:
+Most AI agent projects are either too abstract for beginners or too closed to learn from properly. OpenAgent is:
 
 - **Readable** — the core loop is ~30 lines. No frameworks, no magic.
+- **Educational** — built for beginners who want to learn agent architecture by running it, tracing it, and changing it.
 - **Complete** — web UI, terminal CLI, streaming, tools, memory, teams, plan mode.
 - **Documented** — includes contributor guidance, security policy, translations, and component-level technical references.
-- **Extensible** — add a new tool in 20 lines. Swap the LLM provider by changing one adapter.
+- **LLM-independent** — the core loop targets a shared `LLMClient` interface instead of a single model vendor.
+- **Extensible** — add a new tool in 20 lines. Add or swap provider adapters without rewriting the loop.
 
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.11+ (3.14 recommended)
-- An API key for your chosen provider (Anthropic or OpenAI)
+- Credentials for your chosen LLM provider or compatible endpoint
 
 ### Option 1a: Developer Web UI
 
@@ -93,7 +95,7 @@ EOF
 uvicorn agent_service.main:app --reload
 
 # Developer Frontend (new terminal)
-cd agent-ui
+cd /path/to/openagent/agent-ui
 python3 -m http.server 3500
 
 # Open http://localhost:3500
@@ -103,7 +105,7 @@ python3 -m http.server 3500
 
 ```bash
 # Same backend as above, then in a new terminal:
-cd agent-user-ui
+cd /path/to/openagent/agent-user-ui
 python3 -m http.server 3501
 
 # Open http://localhost:3501
@@ -114,9 +116,9 @@ The User UI is a lighter, user-facing interface with a Forest Canopy light theme
 ### Option 2: Terminal CLI
 
 ```bash
-cd agent-cli
+cd openagent
 python -m venv .venv && source .venv/bin/activate
-pip install -e .
+pip install -e agent-api -e agent-cli
 openagent
 ```
 
@@ -183,11 +185,11 @@ echo "Explain how binary search works" | openagent --no-approval
                   ├─────────────────┤
                   │  Tool Registry   │  ◄── bash, files, think, plan_mode, compact, ...
                   ├─────────────────┤
-                  │   LLM Client     │  ◄── provider-agnostic (swap with one adapter)
+                  │   LLM Client     │  ◄── provider-independent adapter boundary
                   └────────┬────────┘
                            ▼
                     ┌────────────┐
-                    │ LLM Provider │  (Anthropic, OpenAI, or compatible APIs)
+                    │ LLM Provider │  (any supported or compatible backend)
                     └────────────┘
 ```
 
@@ -223,10 +225,11 @@ openagent/
 │   └── js/                   # ES modules (app, renderer, websocket, etc.)
 ├── docs/                # Translated root READMEs
 ├── .github/             # CI, issue templates, PR template
+├── HOW_IT_WORKS.md      # Architecture guide for the runtime stack
 ├── CONTRIBUTING.md     # Contribution guidelines
 ├── CODE_OF_CONDUCT.md  # Community expectations
 ├── SECURITY.md         # Vulnerability disclosure policy
-├── LICENSE             # MIT license
+├── LICENSE             # Business Source License 1.1
 ├── .env.example        # Environment variable reference
 └── REMOTE-CONTROL.md   # Notes for remote-control usage
 ```
@@ -268,17 +271,17 @@ Set environment variables in `agent-api/.env`:
 | `MAX_TOKEN_BUDGET` | `200000` | Token spending limit per session |
 | `OPENAGENT_TIMEOUT` | `1800` | CLI agent loop hard timeout (seconds) |
 
-### Using alternative LLM providers
+### Using different LLM backends
 
 ```bash
 # OpenAI
 LLM_PROVIDER=openai OPENAI_API_KEY=your-key MODEL=gpt-4.1
 
-# DeepSeek (cheap, fast)
+# Anthropic-compatible endpoint
 ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
 
-# Local with Ollama (free)
-# Requires an Anthropic-compatible proxy
+# Any other compatible backend
+# Implement or extend the adapter layer in agent-api/src/agent_service/agent/llm.py
 ```
 
 ## Documentation
@@ -286,6 +289,7 @@ ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
 | Document | Audience | Description |
 |----------|----------|-------------|
 | [README.md](README.md) | Everyone | Product overview, setup, testing, and configuration |
+| [HOW_IT_WORKS.md](HOW_IT_WORKS.md) | Contributors | Architecture walkthrough of the runtime stack |
 | [docs/REPOSITORY.md](docs/REPOSITORY.md) | Contributors | Monorepo layout and maintainer notes |
 | [CLAUDE.md](agent-api/CLAUDE.md) | AI agents / developers | Comprehensive technical reference |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contributors | Branch naming, commit format, PR checklist |
@@ -306,7 +310,7 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for full guide
 - **Add a new tool** — copy `agent-api/src/agent_service/agent/tools/compact_tool.py`, modify, register in `loop.py`
 - **Add a new skill** — create `agent-api/skills/your-skill/SKILL.md`
 - **Add a new preset** — create `agent-api/prompts/your-preset/PROMPT.md`
-- **Add a new LLM provider** — implement the `LLMClient` protocol in `agent/llm.py`
+- **Add a new LLM backend** — implement the `LLMClient` protocol in `agent/llm.py`
 - **Improve the Developer UI** — edit files in `agent-ui/` directly (no build step)
 - **Improve the User UI** — edit files in `agent-user-ui/` directly (no build step)
 
@@ -326,10 +330,12 @@ pre-commit run --all-files
 
 ## License
 
-MIT
+Business Source License 1.1 (BSL 1.1)
+
+See [LICENSE](LICENSE) for the Additional Use Grant, Change Date, and Change License.
 
 For security issues, use [SECURITY.md](SECURITY.md). For community expectations, use [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Acknowledgments
 
-Built around the same production agent patterns popularized by [Claude Code](https://docs.anthropic.com/en/docs/claude-code), with provider adapters for Anthropic and OpenAI.
+Built as a learn-by-doing reference implementation for beginners, using production-style agent patterns with a provider-independent LLM adapter layer.
