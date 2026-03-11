@@ -76,6 +76,20 @@ openagent
 - Python 3.11+（推荐 3.14）
 - 你所选择的 LLM 提供商或兼容端点的凭据
 
+### 已发布的 PyPI 包
+
+OpenAgent 也已经发布到 PyPI：
+
+- `openagent-core` — 后端库
+- `openagent-app` — 终端 CLI
+
+如果你只想直接安装打包好的 CLI，而不是克隆整个 monorepo：
+
+```bash
+pip install openagent-app
+openagent
+```
+
 ### 方式1a：开发者 Web UI
 
 ```bash

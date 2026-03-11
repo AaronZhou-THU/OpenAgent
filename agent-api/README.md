@@ -16,6 +16,13 @@ The Python package split in this repository is:
 - `openagent-core` — backend library
 - `openagent-app` — terminal CLI
 
+Install from PyPI when you only need the packaged artifacts:
+
+```bash
+pip install openagent-core
+pip install openagent-app
+```
+
 ---
 
 Built with **FastAPI + WebSocket** and production-style agent loop patterns.

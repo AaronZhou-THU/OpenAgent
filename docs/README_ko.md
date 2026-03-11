@@ -76,6 +76,20 @@ openagent
 - Python 3.11+ (3.14 권장)
 - 선택한 LLM 제공업체 또는 호환 엔드포인트의 자격 증명
 
+### 배포된 PyPI 패키지
+
+OpenAgent는 PyPI에도 배포되어 있습니다.
+
+- `openagent-core` — 백엔드 라이브러리
+- `openagent-app` — 터미널 CLI
+
+모노레포를 클론하지 않고 패키징된 CLI만 쓰고 싶다면:
+
+```bash
+pip install openagent-app
+openagent
+```
+
 ### 방법 1a: 개발자 Web UI
 
 ```bash

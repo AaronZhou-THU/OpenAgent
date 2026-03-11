@@ -76,6 +76,20 @@ openagent
 - Python 3.11+ (3.14 recomendado)
 - Credenciales de tu proveedor LLM elegido o de un endpoint compatible
 
+### Paquetes publicados en PyPI
+
+OpenAgent también está publicado en PyPI:
+
+- `openagent-core` — librería backend
+- `openagent-app` — CLI de terminal
+
+Si solo quieres usar el CLI empaquetado y no clonar el monorepo:
+
+```bash
+pip install openagent-app
+openagent
+```
+
 ### Opción 1a: Developer Web UI
 
 ```bash

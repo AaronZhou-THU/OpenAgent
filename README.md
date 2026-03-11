@@ -77,6 +77,20 @@ Most AI agent projects are either too abstract for beginners or too closed to le
 - Python 3.11+ (3.14 recommended)
 - Credentials for your chosen LLM provider or compatible endpoint
 
+### Published Packages
+
+OpenAgent is also published on PyPI:
+
+- `openagent-core` — backend library
+- `openagent-app` — terminal CLI
+
+If you only want the packaged CLI instead of a monorepo checkout:
+
+```bash
+pip install openagent-app
+openagent
+```
+
 ### Option 1a: Developer Web UI
 
 ```bash
