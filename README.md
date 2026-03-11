@@ -231,7 +231,7 @@ openagent/
 └── REMOTE-CONTROL.md   # Notes for remote-control usage
 ```
 
-See [docs/REPOSITORY.md](docs/REPOSITORY.md) for a path-by-path map of the monorepo and the remaining maintainer note about embedded Git repositories.
+See [docs/REPOSITORY.md](docs/REPOSITORY.md) for a path-by-path map of the monorepo and maintainer notes about the preserved pre-monorepo histories.
 
 ## Testing
 

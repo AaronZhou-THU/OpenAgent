@@ -40,11 +40,8 @@ The rest of the monorepo root contains project-level files:
 
 ## Maintainer Note
 
-The four runtime components are still embedded as standalone Git repositories inside this monorepo folder:
+The embedded Git repositories have been removed from the runtime component directories,
+so `openagent/` now behaves as a normal single-repository monorepo.
 
-- `agent-api/.git`
-- `agent-cli/.git`
-- `agent-ui/.git`
-- `agent-user-ui/.git`
-
-If you plan to publish `openagent/` as a single public monorepo, flatten or convert those embedded repositories before the first public push. Otherwise Git will treat them as embedded repositories instead of normal tracked directories.
+To preserve the original standalone histories before flattening, Git bundle archives were
+exported to the sibling directory `../openagent-history-bundles/`.
