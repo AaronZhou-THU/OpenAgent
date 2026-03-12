@@ -50,6 +50,27 @@ Agent: [thinking] Let me explore the codebase first...
        register endpoints. Here's what I created: ...
 ```
 
+## Live Deployments
+*(Available before March 20, 2026)*
+
+- User UI: [https://openagent.walden.chat](https://openagent.walden.chat)
+- Developer UI: [https://openagent-dev.walden.chat](https://openagent-dev.walden.chat)
+
+
+## Screenshots
+
+**User UI**
+
+![User UI with file preview](docs/screenshots/user-ui-file-panel.png)
+
+![User UI during an in-progress task](docs/screenshots/user-ui-in-progress.png)
+
+![User UI after task completion](docs/screenshots/user-ui-complete.png)
+
+**Developer UI**
+
+![Developer UI with dev panel](docs/screenshots/developer-ui-devpanel.png)
+
 ## Repository Scope
 
 This monorepo contains the OpenAgent runtime stack and the repo-governance files needed
@@ -71,25 +92,6 @@ Most AI agent projects are either too abstract for beginners or too closed to le
 - **Extensible** — add a new tool in 20 lines. Add or swap provider adapters without rewriting the loop.
 
 ## Quick Start
-
-### Live Deployments
-
-- User UI: [https://openagent.walden.chat](https://openagent.walden.chat)
-- Developer UI: [https://openagent-dev.walden.chat](https://openagent-dev.walden.chat)
-
-### Screenshots
-
-**User UI**
-
-![User UI with file preview](docs/screenshots/user-ui-file-panel.png)
-
-![User UI during an in-progress task](docs/screenshots/user-ui-in-progress.png)
-
-![User UI after task completion](docs/screenshots/user-ui-complete.png)
-
-**Developer UI**
-
-![Developer UI with dev panel](docs/screenshots/developer-ui-devpanel.png)
 
 ### Prerequisites
 
