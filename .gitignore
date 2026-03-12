@@ -39,6 +39,5 @@ htmlcov/
 # Workspace artifacts
 workspace/
 
-# Local chat history exports
-exports/chat-history-2026-03-12.md
-exports/chat-history-2026-03-12.json
+# Local exports
+exports/

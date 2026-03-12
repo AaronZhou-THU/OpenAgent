@@ -72,6 +72,25 @@ Most AI agent projects are either too abstract for beginners or too closed to le
 
 ## Quick Start
 
+### Live Deployments
+
+- User UI: [https://openagent.walden.chat](https://openagent.walden.chat)
+- Developer UI: [https://openagent-dev.walden.chat](https://openagent-dev.walden.chat)
+
+### Screenshots
+
+**User UI**
+
+![User UI with file preview](docs/screenshots/user-ui-file-panel.png)
+
+![User UI during an in-progress task](docs/screenshots/user-ui-in-progress.png)
+
+![User UI after task completion](docs/screenshots/user-ui-complete.png)
+
+**Developer UI**
+
+![Developer UI with dev panel](docs/screenshots/developer-ui-devpanel.png)
+
 ### Prerequisites
 
 - Python 3.11+ (3.14 recommended)
@@ -126,6 +145,8 @@ python3 -m http.server 3501
 ```
 
 The User UI is a lighter, user-facing interface with a Forest Canopy light theme, activity indicators instead of raw tool blocks, and simplified approval dialogs. Both UIs connect to the same backend.
+
+For deployed environments, both web UIs default to the current page origin as their API and WebSocket base. In practice, this means a reverse-proxied setup like `https://your-ui.example.com` can talk to the backend on the same host without setting `localStorage.API_BASE_URL`. For local development on `localhost` or `127.0.0.1`, they still default to `http://localhost:8000`.
 
 ### Option 2: Terminal CLI
 
@@ -287,6 +308,13 @@ Set environment variables in `agent-api/.env`:
 | `MAX_TURNS` | `50` | Max agent loop iterations |
 | `MAX_TOKEN_BUDGET` | `200000` | Token spending limit per session |
 | `OPENAGENT_TIMEOUT` | `1800` | CLI agent loop hard timeout (seconds) |
+
+### Runtime Storage Notes
+
+- Workspace files are created under `WORKSPACE_DIR` and are temporary by default.
+- After a WebSocket session disconnects, the backend schedules workspace cleanup after `WORKSPACE_CLEANUP_DELAY` seconds.
+- Conversation history is stored separately in the SQLite database (`agent.db` by default) and is not deleted by workspace cleanup.
+- Without application-level authentication, conversation history is shared at the deployment level. Any client that can reach the API can list, read, and delete conversations.
 
 ### Using different LLM backends
 
