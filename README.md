@@ -311,10 +311,11 @@ Set environment variables in `agent-api/.env`:
 
 ### Runtime Storage Notes
 
-- Workspace files are created under `WORKSPACE_DIR` and are temporary by default.
+- OpenAgent currently has no application-level authentication or user isolation.
+- Conversation history is shared at the deployment level. Any client that can reach the API can list, read, and delete conversations.
+- Workspace files are created under `WORKSPACE_DIR` and are ephemeral by design. This is intentional: the workspace is framed as a temporary execution sandbox for each session, not durable user storage.
 - After a WebSocket session disconnects, the backend schedules workspace cleanup after `WORKSPACE_CLEANUP_DELAY` seconds.
 - Conversation history is stored separately in the SQLite database (`agent.db` by default) and is not deleted by workspace cleanup.
-- Without application-level authentication, conversation history is shared at the deployment level. Any client that can reach the API can list, read, and delete conversations.
 
 ### Using different LLM backends
 
