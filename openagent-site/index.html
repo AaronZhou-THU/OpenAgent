@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenAgent — Learn Agent Systems by Running One</title>
+  <meta name="description" content="A polished static site for OpenAgent, based on the project README and HOW_IT_WORKS guide.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232d5a3a'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='28' font-weight='700' fill='%23fffaf0'%3EOA%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f2e8;
+      --paper: rgba(255, 252, 246, 0.82);
+      --panel: rgba(248, 243, 233, 0.9);
+      --card: #fffdf8;
+      --ink: #142218;
+      --muted: #57655b;
+      --line: rgba(20, 34, 24, 0.11);
+      --accent: #2d5a3a;
+      --accent-2: #b87333;
+      --accent-soft: rgba(45, 90, 58, 0.1);
+      --shadow: 0 18px 50px rgba(31, 38, 30, 0.12);
+      --radius: 24px;
+      --radius-sm: 16px;
+      --container: 1180px;
+      --font-body: "Manrope", system-ui, sans-serif;
+      --font-display: "Fraunces", Georgia, serif;
+      --font-mono: "SFMono-Regular", "SF Mono", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(184, 115, 51, 0.11), transparent 28%),
+        radial-gradient(circle at 85% 15%, rgba(45, 90, 58, 0.14), transparent 26%),
+        linear-gradient(180deg, #f8f4ec 0%, #f3efe5 55%, #ede8db 100%);
+      line-height: 1.65;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(20, 34, 24, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 34, 24, 0.02) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 70%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .shell {
+      width: min(calc(100% - 32px), var(--container));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      background: rgba(246, 242, 232, 0.78);
+      border-bottom: 1px solid rgba(20, 34, 24, 0.08);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .brand-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), #143322);
+      color: #f9f6ef;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .nav a {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      color: var(--muted);
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .nav a:hover {
+      background: rgba(45, 90, 58, 0.08);
+      color: var(--ink);
+    }
+
+    .hero {
+      padding: 56px 0 28px;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .hero-panel {
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background: var(--paper);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-copy::after {
+      content: "";
+      position: absolute;
+      right: -70px;
+      top: -70px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(184, 115, 51, 0.18), transparent 65%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(45, 90, 58, 0.08);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-family: var(--font-display);
+      line-height: 1.08;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 5vw, 5.6rem);
+      max-width: 10ch;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 18px 0 0;
+      max-width: 58ch;
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button-primary {
+      color: #faf7f1;
+      background: linear-gradient(135deg, var(--accent), #1d4129);
+      box-shadow: 0 16px 28px rgba(45, 90, 58, 0.24);
+    }
+
+    .button-secondary {
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.45);
+      color: var(--ink);
+    }
+
+    .hero-panel {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+      background:
+        linear-gradient(180deg, rgba(20, 34, 24, 0.98), rgba(12, 18, 14, 0.98)),
+        linear-gradient(120deg, rgba(184, 115, 51, 0.16), transparent 40%);
+      color: #eff0eb;
+    }
+
+    .panel-label {
+      color: rgba(239, 240, 235, 0.72);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .terminal {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .terminal-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      color: rgba(239, 240, 235, 0.72);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .terminal-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.26);
+    }
+
+    .terminal-body {
+      padding: 18px 18px 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      color: #d9e1d9;
+    }
+
+    .highlight {
+      color: #e6b07a;
+    }
+
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .signal {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .signal strong {
+      display: block;
+      font-size: 28px;
+      margin-bottom: 2px;
+      font-family: var(--font-display);
+      font-weight: 700;
+    }
+
+    .signal span {
+      font-size: 12px;
+      color: rgba(239, 240, 235, 0.72);
+    }
+
+    .section {
+      padding: 28px 0;
+    }
+
+    .section-header {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 22px;
+      margin-bottom: 22px;
+      align-items: start;
+    }
+
+    .section-kicker {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding-top: 10px;
+    }
+
+    .section-header h2 {
+      font-size: clamp(2rem, 3.6vw, 3.5rem);
+      letter-spacing: -0.035em;
+      margin-bottom: 10px;
+    }
+
+    .section-header p {
+      margin: 0;
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 64ch;
+    }
+
+    .info-grid,
+    .feature-grid,
+    .surface-grid,
+    .risk-grid,
+    .deploy-grid,
+    .steps-grid,
+    .resource-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .info-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .surface-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .feature-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .risk-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .deploy-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .steps-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .resource-grid {
+      grid-template-columns: 1.25fr 0.75fr;
+    }
+
+    .card,
+    .feature,
+    .surface,
+    .risk,
+    .deploy,
+    .step,
+    .resource {
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .card,
+    .feature,
+    .surface,
+    .risk,
+    .deploy,
+    .step,
+    .resource {
+      padding: 22px;
+    }
+
+    .card h3,
+    .feature h3,
+    .surface h3,
+    .risk h3,
+    .deploy h3,
+    .resource h3 {
+      font-size: 26px;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+
+    .card p,
+    .feature p,
+    .surface p,
+    .risk p,
+    .deploy p,
+    .step p,
+    .resource p,
+    .resource li {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .surface small,
+    .risk small,
+    .deploy small,
+    .step small {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .pill {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .architecture {
+      position: relative;
+      padding: 28px;
+      border-radius: 32px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 252, 246, 0.92), rgba(244, 239, 228, 0.92));
+      box-shadow: var(--shadow);
+    }
+
+    .architecture-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: stretch;
+    }
+
+    .arch-box {
+      padding: 20px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .arch-box h3 {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    .arch-box ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .arch-box li {
+      margin-bottom: 8px;
+    }
+
+    .arch-core {
+      grid-column: span 4;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 0.8fr;
+      gap: 18px;
+      margin-top: 4px;
+    }
+
+    .code-slab {
+      margin-top: 18px;
+      border-radius: 24px;
+      background: #152117;
+      color: #eef2e8;
+      padding: 22px;
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .code-slab pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.75;
+      white-space: pre;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .shot {
+      border-radius: 26px;
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.88);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 18px;
+      border: 1px solid rgba(20, 34, 24, 0.08);
+    }
+
+    .shot figcaption {
+      padding: 16px 18px 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .check {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(45, 90, 58, 0.06);
+      border: 1px solid rgba(45, 90, 58, 0.1);
+    }
+
+    .check-mark {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #f8f4ec;
+      font-size: 13px;
+      flex: 0 0 auto;
+    }
+
+    .resource ul {
+      margin: 14px 0 0;
+      padding-left: 20px;
+    }
+
+    .footer {
+      padding: 30px 0 56px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer-card {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding: 18px 20px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 1100px) {
+      .hero,
+      .section-header,
+      .resource-grid,
+      .arch-core {
+        grid-template-columns: 1fr;
+      }
+
+      .info-grid,
+      .surface-grid,
+      .feature-grid,
+      .risk-grid,
+      .deploy-grid,
+      .steps-grid,
+      .architecture-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .arch-core {
+        grid-column: span 2;
+      }
+
+      .section-kicker {
+        padding-top: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(calc(100% - 20px), var(--container));
+      }
+
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .hero-copy,
+      .hero-panel,
+      .architecture,
+      .card,
+      .feature,
+      .surface,
+      .risk,
+      .deploy,
+      .step,
+      .resource {
+        border-radius: 24px;
+      }
+
+      .hero {
+        padding-top: 32px;
+      }
+
+      .hero-copy {
+        padding: 24px;
+      }
+
+      .hero-panel {
+        padding: 18px;
+      }
+
+      .info-grid,
+      .surface-grid,
+      .feature-grid,
+      .risk-grid,
+      .deploy-grid,
+      .steps-grid,
+      .architecture-grid,
+      .arch-core {
+        grid-template-columns: 1fr;
+      }
+
+      .arch-core {
+        grid-column: auto;
+      }
+
+      .footer-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-badge">OA</span>
+        <span>OpenAgent</span>
+      </a>
+      <nav class="nav">
+        <a href="#overview">Overview</a>
+        <a href="#surfaces">Surfaces</a>
+        <a href="#loop">Agent Loop</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#features">Features</a>
+        <a href="#deployments">Deployments</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Source-available AI coding agent</div>
+        <h1>Learn agent systems by running one yourself.</h1>
+        <p>
+          OpenAgent is a beginner-friendly coding agent that lets you study the real thing:
+          a backend agent loop, multiple user surfaces, live streaming over WebSocket, a tool
+          system that can read and write files, and a runtime that is simple enough to inspect
+          but complete enough to deploy.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#overview">Read the system</a>
+          <a class="button button-secondary" href="https://github.com/AaronZhou-THU/openagent" target="_blank" rel="noreferrer">View on GitHub</a>
+          <a class="button button-secondary" href="https://openagent.walden.chat" target="_blank" rel="noreferrer">Open user UI</a>
+          <a class="button button-secondary" href="https://openagent-dev.walden.chat" target="_blank" rel="noreferrer">Open developer UI</a>
+        </div>
+        <div class="pill-row">
+          <span class="pill">Tool use</span>
+          <span class="pill">Planning</span>
+          <span class="pill">Streaming</span>
+          <span class="pill">Memory</span>
+          <span class="pill">Sub-agents</span>
+          <span class="pill">Teams</span>
+        </div>
+      </div>
+
+      <aside class="hero-panel">
+        <div>
+          <div class="panel-label">How it feels</div>
+          <div class="terminal">
+            <div class="terminal-top">
+              <div class="terminal-dots"><span></span><span></span><span></span></div>
+              <div>Agent loop in motion</div>
+            </div>
+            <div class="terminal-body">You: “Add JWT auth to this project”
+
+Agent: <span class="highlight">[thinking]</span> Let me inspect the codebase first...
+       <span class="highlight">[read_file]</span> src/app.py
+       <span class="highlight">[read_file]</span> requirements.txt
+       <span class="highlight">[write_file]</span> src/auth.py
+       <span class="highlight">[edit_file]</span> src/app.py
+       <span class="highlight">[bash]</span> pytest tests/
+
+Done. I added login/register routes, token generation,
+and verified the flow before finishing.</div>
+          </div>
+        </div>
+
+        <div class="signal-grid">
+          <div class="signal">
+            <strong>3</strong>
+            <span>interfaces on one backend</span>
+          </div>
+          <div class="signal">
+            <strong>15+</strong>
+            <span>built-in tools</span>
+          </div>
+          <div class="signal">
+            <strong>Live</strong>
+            <span>public HTTPS deployment</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section id="gallery" class="section">
+      <div class="section-header">
+        <div class="section-kicker">Screens</div>
+        <div>
+          <h2>Two interfaces, two levels of abstraction.</h2>
+          <p>
+            The public deployment makes the product split visible. The developer surface keeps protocol detail in
+            view. The user surface keeps attention on progress, outputs, and files.
+          </p>
+        </div>
+      </div>
+
+      <div class="gallery">
+        <figure class="shot">
+          <img src="../docs/screenshots/user-ui-complete.png" alt="OpenAgent user UI after task completion">
+          <figcaption>User UI: lighter interface focused on task completion, outputs, and reduced cognitive load.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../docs/screenshots/developer-ui-devpanel.png" alt="OpenAgent developer UI with dev panel">
+          <figcaption>Developer UI: tool and protocol detail stay visible for debugging and inspection.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="overview" class="section">
+      <div class="section-header">
+        <div class="section-kicker">Overview</div>
+        <div>
+          <h2>What this project actually is.</h2>
+          <p>
+            OpenAgent is not just a chat UI. It is a complete runtime stack for an AI coding agent:
+            one backend that owns the agent loop, one tool system that can act on a workspace, and
+            three interfaces that expose the same core capability at different levels of abstraction.
+          </p>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <article class="card">
+          <h3>Readable</h3>
+          <p>
+            The architecture is explicit. You can follow the message from the browser to the backend,
+            into the LLM adapter, through tool execution, and back to the user.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Educational</h3>
+          <p>
+            The project is built to teach how agent systems work in practice: not only prompts, but
+            planning, streaming, tools, memory, verification, tasking, and runtime boundaries.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Deployable</h3>
+          <p>
+            It is simple enough to study locally and complete enough to run on a real public server
+            with HTTPS, reverse proxying, and separate developer and user-facing surfaces.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="surfaces" class="section">
+      <div class="section-header">
+        <div class="section-kicker">Product Surfaces</div>
+        <div>
+          <h2>One backend, three different product experiences.</h2>
+          <p>
+            README and HOW_IT_WORKS both make the same architectural point: the intelligence does not
+            live in the frontends. The UI and CLI are surfaces over one shared backend contract.
+          </p>
+        </div>
+      </div>
+
+      <div class="surface-grid">
+        <article class="surface">
+          <small>Surface 01</small>
+          <h3>Developer UI</h3>
+          <p>
+            Dark theme, tool blocks, token usage, raw WebSocket visibility, and controls for planning,
+            approval, tracing, and teams. Built for builders and debuggers.
+          </p>
+        </article>
+        <article class="surface">
+          <small>Surface 02</small>
+          <h3>User UI</h3>
+          <p>
+            A lighter interface with reduced protocol detail, more task-oriented feedback, and a simpler
+            interaction model for end users who care more about outcomes than internals.
+          </p>
+        </article>
+        <article class="surface">
+          <small>Surface 03</small>
+          <h3>Terminal CLI</h3>
+          <p>
+            A direct command-line surface with session persistence, history, slash commands, and a richer
+            terminal workflow for developers who prefer keyboard-first control.
+          </p>
+        </article>
+        <article class="surface">
+          <small>Shared Core</small>
+          <h3>Agent API</h3>
+          <p>
+            FastAPI + WebSocket backend that stores conversations, streams agent output, registers tools,
+            manages memory and tasks, and mediates all LLM interaction.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="loop" class="section">
+      <div class="section-header">
+        <div class="section-kicker">Core Runtime</div>
+        <div>
+          <h2>The agent loop is the product core.</h2>
+          <p>
+            The system behavior is built around a simple but powerful pattern: send the conversation and
+            tool definitions to the model, stream its response, execute requested tools, send results back,
+            and repeat until the model finishes.
+          </p>
+        </div>
+      </div>
+
+      <div class="steps-grid">
+        <article class="step">
+          <small>Step 1</small>
+          <p>The backend prepares system prompt, history, memory, available skills, and tool schemas.</p>
+        </article>
+        <article class="step">
+          <small>Step 2</small>
+          <p>The LLM receives conversation state through a provider-agnostic client interface.</p>
+        </article>
+        <article class="step">
+          <small>Step 3</small>
+          <p>Text deltas stream back live over WebSocket while tool calls are collected.</p>
+        </article>
+        <article class="step">
+          <small>Step 4</small>
+          <p>The runtime executes tools, enforces guards, and feeds results back into the loop.</p>
+        </article>
+        <article class="step">
+          <small>Step 5</small>
+          <p>The agent self-verifies with the think tool and exits only when it decides the task is done.</p>
+        </article>
+      </div>
+
+      <div class="code-slab">
+        <pre>while not done:
+    micro_compact(messages)
+    drain_background_notifications()
+    drain_teammate_inbox()
+    response = model(messages, tools)
+
+    if response.truncated:
+        continue
+    if not response.tool_calls:
+        break
+
+    results = execute_tools(response.tool_calls)
+    messages.append(results)
+
+final_summary = model(messages, [])</pre>
+      </div>
+
+      <div class="checklist">
+        <div class="check">
+          <div class="check-mark">✓</div>
+          <div>
+            <strong>Streaming is first-class.</strong> Users do not wait for a final blob response. They see text,
+            tool calls, tool results, status updates, and completion events as they happen.
+          </div>
+        </div>
+        <div class="check">
+          <div class="check-mark">✓</div>
+          <div>
+            <strong>Verification stays inside the loop.</strong> The system does not bolt on a separate QA phase.
+            The agent uses the think tool to inspect its own work and keep iterating if needed.
+          </div>
+        </div>
+        <div class="check">
+          <div class="check-mark">✓</div>
+          <div>
+            <strong>Context is actively managed.</strong> Old tool output can be compacted, transcripts can be kept,
+            and the loop can continue past truncation limits instead of failing abruptly.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="section">
+      <div class="section-header">
+        <div class="section-kicker">Architecture</div>
+        <div>
+          <h2>A layered architecture with clear responsibilities.</h2>
+          <p>
+            One of OpenAgent’s strengths is that the major concerns are explicit: surfaces, transport,
+            runtime loop, tool system, and LLM adapter boundary are separable enough to learn from and
+            evolve independently.
+          </p>
+        </div>
+      </div>
+
+      <div class="architecture">
+        <div class="architecture-grid">
+          <article class="arch-box">
+            <h3>Surfaces</h3>
+            <ul>
+              <li>`agent-ui` for developers</li>
+              <li>`agent-user-ui` for end users</li>
+              <li>`agent-cli` for terminal workflows</li>
+            </ul>
+          </article>
+          <article class="arch-box">
+            <h3>Transport</h3>
+            <ul>
+              <li>REST for setup and retrieval</li>
+              <li>WebSocket for live interaction</li>
+              <li>Structured events for tools and status</li>
+            </ul>
+          </article>
+          <article class="arch-box">
+            <h3>Runtime</h3>
+            <ul>
+              <li>Agent loop</li>
+              <li>Compaction</li>
+              <li>Memory</li>
+              <li>Approval and plan mode</li>
+            </ul>
+          </article>
+          <article class="arch-box">
+            <h3>Execution</h3>
+            <ul>
+              <li>Tool registry</li>
+              <li>File and bash tools</li>
+              <li>Background jobs</li>
+              <li>Sub-agents and teammates</li>
+            </ul>
+          </article>
+          <div class="arch-core">
+            <article class="arch-box">
+              <h3>Provider abstraction</h3>
+              <ul>
+                <li>Shared `LLMClient` contract</li>
+                <li>Provider-specific adapters</li>
+                <li>Loop does not depend on a single vendor SDK</li>
+              </ul>
+            </article>
+            <article class="arch-box">
+              <h3>Persistence</h3>
+              <ul>
+                <li>SQLite for conversations and token usage</li>
+                <li>`workspace/` for temporary task artifacts</li>
+                <li>hidden internal folders for memory, tasks, transcripts, and team state</li>
+              </ul>
+            </article>
+            <article class="arch-box">
+              <h3>Ops reality</h3>
+              <ul>
+                <li>Reverse proxy matters</li>
+                <li>Same-origin behavior matters</li>
+                <li>Storage semantics matter</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="section-header">
+        <div class="section-kicker">Feature Set</div>
+        <div>
+          <h2>Capabilities that make it feel like an actual agent system.</h2>
+          <p>
+            The README positions OpenAgent as more than a loop around a model. The feature set backs that up:
+            tools, planning, memory, verification, background work, and multi-agent collaboration are all part
+            of the runtime story.
+          </p>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature">
+          <h3>Tool use</h3>
+          <p>Bash, file operations, code navigation, tasking, skill loading, background execution, and more.</p>
+        </article>
+        <article class="feature">
+          <h3>Planning and approval</h3>
+          <p>Read-only plan mode, agent-initiated planning, and optional human-in-the-loop approval gates.</p>
+        </article>
+        <article class="feature">
+          <h3>Memory and compaction</h3>
+          <p>Cross-session memory plus multiple compaction layers to keep long-running sessions workable.</p>
+        </article>
+        <article class="feature">
+          <h3>Sub-agents and teams</h3>
+          <p>Focused child agents, teammate status tracking, inbox messaging, and coordinated parallel work.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="deployments" class="section">
+      <div class="section-header">
+        <div class="section-kicker">Deployment Reality</div>
+        <div>
+          <h2>The runtime details matter in production.</h2>
+          <p>
+            The project documentation and recent deployment work make several product-relevant boundaries explicit:
+            workspace files are temporary, chat history is stored separately, and without auth the system behaves as
+            a shared deployment rather than isolated user accounts.
+          </p>
+        </div>
+      </div>
+
+      <div class="risk-grid">
+        <article class="risk">
+          <small>Storage</small>
+          <h3>Workspace</h3>
+          <p>Files created by the agent live under `WORKSPACE_DIR` and are temporary by default.</p>
+        </article>
+        <article class="risk">
+          <small>Persistence</small>
+          <h3>Chat history</h3>
+          <p>Conversation history lives in SQLite and survives session end, but not necessarily container recreation.</p>
+        </article>
+        <article class="risk">
+          <small>Routing</small>
+          <h3>Same-origin</h3>
+          <p>The web UIs need production-aware API and WebSocket routing, not hardcoded localhost assumptions.</p>
+        </article>
+        <article class="risk">
+          <small>Access model</small>
+          <h3>No auth</h3>
+          <p>Without app-level authentication, conversations are shared at the deployment level, not the user level.</p>
+        </article>
+      </div>
+
+      <div class="deploy-grid" style="margin-top: 18px;">
+        <article class="deploy">
+          <small>Public user surface</small>
+          <h3><a href="https://openagent.walden.chat" target="_blank" rel="noreferrer">openagent.walden.chat</a></h3>
+          <p>Result-oriented interface for end users.</p>
+        </article>
+        <article class="deploy">
+          <small>Public developer surface</small>
+          <h3><a href="https://openagent-dev.walden.chat" target="_blank" rel="noreferrer">openagent-dev.walden.chat</a></h3>
+          <p>Protocol-rich interface for developers and debugging workflows.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="resources" class="section">
+      <div class="section-header">
+        <div class="section-kicker">Further Reading</div>
+        <div>
+          <h2>The repo stays readable end to end.</h2>
+          <p>
+            This page is an editorial layer over the source material, not a replacement for it. The repo itself still
+            contains the clearest references for setup, architecture, and component-level behavior.
+          </p>
+        </div>
+      </div>
+
+      <div class="resource-grid">
+        <article class="resource">
+          <h3>Read next</h3>
+          <ul>
+            <li><a href="../README.md">README.md</a> for setup, features, deployments, and configuration.</li>
+            <li><a href="../HOW_IT_WORKS.md">HOW_IT_WORKS.md</a> for a guided architecture walkthrough.</li>
+            <li><a href="../agent-api/README.md">agent-api/README.md</a> for backend behavior and API details.</li>
+            <li><a href="../docs/REPOSITORY.md">docs/REPOSITORY.md</a> for a map of the monorepo.</li>
+          </ul>
+        </article>
+        <article class="resource">
+          <h3>GitHub repo</h3>
+          <p>
+            The full monorepo is on
+            <a href="https://github.com/AaronZhou-THU/openagent" target="_blank" rel="noreferrer">GitHub</a>.
+            That is the best place to inspect the backend agent loop, terminal CLI, both web UIs, and deployment-facing docs in one place.
+          </p>
+        </article>
+      </div>
+
+      <article class="resource" style="margin-top: 18px;">
+        <h3>Published Packages</h3>
+        <p>
+          OpenAgent is also published on PyPI if you only want the packaged CLI instead of a monorepo checkout.
+        </p>
+        <ul>
+          <li><a href="https://pypi.org/project/openagent-core/" target="_blank" rel="noreferrer"><code>openagent-core</code></a> — backend library</li>
+          <li><a href="https://pypi.org/project/openagent-app/" target="_blank" rel="noreferrer"><code>openagent-app</code></a> — terminal CLI</li>
+        </ul>
+        <div class="code-slab">
+          <pre><code>pip install openagent-app
+openagent</code></pre>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="shell footer">
+    <div class="footer-card">
+      <div>
+        <strong>OpenAgent</strong><br>
+        A source-available coding agent built to be studied, changed, and deployed.
+      </div>
+      <div>
+        Based on the project README, HOW_IT_WORKS guide, and the live deployment surfaces.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
