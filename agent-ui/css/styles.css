@@ -79,12 +79,39 @@ html, body {
   flex-shrink: 0;
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .logo {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin: 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
+}
+
+.beta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(115, 142, 232, 0.28);
+  background: rgba(115, 142, 232, 0.12);
+  color: #aebeff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.beta-badge-inline {
+  flex-shrink: 0;
 }
 
 #new-chat-btn {

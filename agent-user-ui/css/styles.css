@@ -105,12 +105,39 @@ a {
   border-bottom: 1px solid #e8e6e1;
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .sidebar-header .logo {
   font-family: var(--font-heading);
   font-size: 18px;
   color: var(--accent);
   font-weight: 600;
-  margin-bottom: 12px;
+  margin: 0;
+}
+
+.beta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(134, 149, 118, 0.12);
+  border: 1px solid rgba(134, 149, 118, 0.28);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.beta-badge-inline {
+  flex-shrink: 0;
 }
 
 #new-chat-btn {
