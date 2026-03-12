@@ -82,6 +82,11 @@ The agent uses the **think tool** to self-verify its work before finishing — n
 
 ## Quick Start
 
+### Public Deployment
+
+- User UI: [https://openagent.walden.chat](https://openagent.walden.chat)
+- Developer UI: [https://openagent-dev.walden.chat](https://openagent-dev.walden.chat)
+
 ### 1. Install
 
 ```bash
@@ -126,6 +131,8 @@ cd ../agent-user-ui && python3 -m http.server 3501
 | **Token usage** | Header display | Hidden |
 | **Feature toggles** | Teams, Approval, Plan Mode buttons | None |
 
+When the UIs are served from a non-localhost origin, they default to same-origin API and WebSocket endpoints. For local development on `localhost` or `127.0.0.1`, they default to `http://localhost:8000` and `ws://localhost:8000`.
+
 ### 4. Test
 
 ```bash
@@ -150,6 +157,14 @@ wscat -c ws://localhost:8000/api/chat/{conversation_id}/ws
 cp .env.example .env   # set LLM_PROVIDER and the matching API key
 docker compose up --build
 ```
+
+## Storage Model
+
+- Workspace files live under `WORKSPACE_DIR` (`workspace/` by default).
+- Uploaded files and agent-created files share that same workspace root.
+- Workspace cleanup is deferred by `WORKSPACE_CLEANUP_DELAY` seconds after session disconnect, so generated files are temporary unless you mount `workspace/` to persistent storage.
+- Conversation history is stored in the SQL database configured by `DATABASE_URL` (`agent.db` by default) and is not removed by workspace cleanup.
+- Without app-level authentication, conversations are global to the deployment rather than user-scoped.
 
 ## API Reference
 

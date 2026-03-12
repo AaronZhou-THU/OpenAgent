@@ -38,3 +38,6 @@ htmlcov/
 
 # Workspace artifacts
 workspace/
+
+# Local exports
+exports/
