@@ -521,7 +521,16 @@ function formatFileSize(bytes) {
 let _apiModule = null;
 function getApiModule() {
   if (!_apiModule) {
-    _apiModule = { fileUrl: (convId, path) => `${localStorage.getItem('API_BASE_URL') || 'http://localhost:8000'}/api/files/${convId}/${path}` };
+    const origin = typeof window !== 'undefined' && window.location
+      && /^https?:$/.test(window.location.protocol)
+      ? window.location.origin
+      : 'http://localhost:8000';
+    const apiBase = localStorage.getItem('API_BASE_URL')
+      || ((typeof window !== 'undefined' && window.location
+        && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+        ? 'http://localhost:8000'
+        : origin);
+    _apiModule = { fileUrl: (convId, path) => `${apiBase}/api/files/${convId}/${path}` };
   }
   return _apiModule;
 }
