@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能助手</title>
+
+  <!-- Anthropic brand fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- marked.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+
+  <!-- DOMPurify — sanitize HTML from markdown rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Login overlay (shown when Google Auth is enabled and user is not signed in) -->
+  <div id="login-overlay" class="login-overlay hidden">
+    <div class="login-modal">
+      <h1 class="login-title">智能助手</h1>
+      <p class="login-subtitle">请登录以继续</p>
+      <div id="google-signin-btn" class="google-signin-container"></div>
+    </div>
+  </div>
+
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-lockup">
+          <h1 class="logo">智能助手</h1>
+          <span class="beta-badge">测试版</span>
+        </div>
+        <button id="new-chat-btn" title="新建对话">+ 新建对话</button>
+      </div>
+      <div id="conversation-list" class="conversation-list"></div>
+      <!-- User profile (shown when authenticated) -->
+      <div id="user-profile" class="user-profile hidden">
+        <img id="user-avatar" class="user-avatar" src="" alt="用户头像">
+        <span id="user-name" class="user-name"></span>
+        <button id="sign-out-btn" class="sign-out-btn" title="退出登录">退出</button>
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main id="chat-area">
+      <!-- Chat Header -->
+      <header id="chat-header">
+        <div class="header-left">
+          <button id="sidebar-toggle" class="mobile-only" title="切换侧边栏">&#9776;</button>
+          <h2 id="chat-title">请选择一个对话</h2>
+          <span class="beta-badge beta-badge-inline">测试版</span>
+        </div>
+        <div class="header-right">
+          <button id="teams-btn" class="header-toggle-btn hidden" title="切换团队模式">
+            <span class="header-toggle-label">团队</span>
+          </button>
+          <button id="approval-btn" class="header-toggle-btn hidden" title="切换审批模式">
+            <span class="header-toggle-label">审批</span>
+          </button>
+          <button id="plan-mode-btn" class="plan-mode-btn hidden" title="切换规划模式">
+            <span class="plan-mode-label">规划</span>
+          </button>
+          <span id="connection-status" class="status-indicator disconnected" title="未连接">&#9679;</span>
+          <span id="token-usage" class="token-usage" title="Token 用量"></span>
+        </div>
+      </header>
+
+      <!-- Messages -->
+      <div id="messages" class="messages">
+        <div id="welcome" class="welcome">
+          <h2>欢迎使用智能助手</h2>
+          <p>新建对话或从侧边栏选择已有对话开始使用。</p>
+        </div>
+      </div>
+
+      <!-- Input Bar -->
+      <div id="input-bar" class="input-bar">
+        <textarea
+          id="message-input"
+          placeholder="输入消息..."
+          rows="1"
+          disabled
+        ></textarea>
+        <button id="cancel-btn" class="cancel-btn hidden" title="停止">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"></rect>
+          </svg>
+        </button>
+        <button id="send-btn" disabled title="发送消息">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13"></path>
+            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- Preset Selector Overlay -->
+    <div id="preset-overlay" class="preset-overlay hidden">
+      <div class="preset-modal">
+        <h3>新建对话</h3>
+        <div id="preset-list" class="preset-list"></div>
+        <div class="preset-options">
+          <label class="toggle-option" title="启用团队协作，多个智能体并行工作">
+            <input type="checkbox" id="enable-teams-toggle">
+            <span class="toggle-label">启用团队</span>
+            <span class="toggle-desc">生成多个协作智能体并行工作</span>
+          </label>
+          <label class="toggle-option" title="将原始 LLM API 请求/响应数据发送到开发面板">
+            <input type="checkbox" id="enable-tracing-toggle">
+            <span class="toggle-label">LLM 追踪</span>
+            <span class="toggle-desc">在开发面板中显示完整的 API 数据</span>
+          </label>
+          <label class="toggle-option" title="在执行危险工具前暂停并等待用户审批">
+            <input type="checkbox" id="enable-approval-toggle">
+            <span class="toggle-label">工具审批</span>
+            <span class="toggle-desc">执行工具调用前需人工审核确认</span>
+          </label>
+          <label class="toggle-option" title="智能体先探索和规划，再执行">
+            <input type="checkbox" id="enable-plan-mode-toggle">
+            <span class="toggle-label">规划模式</span>
+            <span class="toggle-desc">只读探索和规划后再执行操作</span>
+          </label>
+        </div>
+        <button id="preset-create-btn" class="preset-create-btn">创建</button>
+      </div>
+    </div>
+
+    <!-- Plan Approval Overlay -->
+    <div id="plan-approval-overlay" class="plan-approval-overlay hidden">
+      <div class="plan-approval-modal">
+        <h3>方案待审核</h3>
+        <div id="plan-content" class="plan-content"></div>
+        <div class="plan-approval-actions">
+          <button id="plan-approve-btn" class="approval-btn approve-btn">批准并执行</button>
+          <button id="plan-reject-btn" class="approval-btn deny-btn">驳回</button>
+        </div>
+        <div id="plan-feedback-section" class="plan-feedback-section hidden">
+          <textarea id="plan-feedback-input" placeholder="请输入反馈意见..." rows="3"></textarea>
+          <button id="plan-feedback-submit" class="approval-btn">提交反馈</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Todo Panel (slide-in overlay) -->
+    <aside id="todo-panel" class="todo-panel hidden">
+      <div class="todo-header">
+        <h3>任务列表</h3>
+        <button id="todo-close" title="关闭">&times;</button>
+      </div>
+      <div id="todo-list" class="todo-list"></div>
+    </aside>
+  </div>
+
+  <!-- App modules -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

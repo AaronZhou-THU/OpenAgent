@@ -76,7 +76,7 @@ Agent: [thinking] Let me explore the codebase first...
 This monorepo contains the OpenAgent runtime stack and the repo-governance files needed
 to publish and maintain it as a source-available project.
 
-- Runtime projects: `agent-api/`, `agent-cli/`, `agent-ui/`, `agent-user-ui/`
+- Runtime projects: `agent-api/`, `agent-cli/`, `agent-ui/`, `agent-user-ui/`, `agent-ui-cn/`, `agent-user-ui-cn/`
 - Repo operations: `.github/`, `docs/`, `README.md`, `CONTRIBUTING.md`, `LICENSE`,
   `SECURITY.md`, `CODE_OF_CONDUCT.md`
 
@@ -148,6 +148,24 @@ python3 -m http.server 3501
 
 The User UI is a lighter, user-facing interface with a Forest Canopy light theme, activity indicators instead of raw tool blocks, and simplified approval dialogs. Both UIs connect to the same backend.
 
+### Option 1c: Chinese Web UIs
+
+Chinese-translated versions of both frontends are available:
+
+```bash
+# Chinese Developer UI
+cd /path/to/openagent/agent-ui-cn
+python3 -m http.server 3502
+# Open http://localhost:3502
+
+# Chinese User UI
+cd /path/to/openagent/agent-user-ui-cn
+python3 -m http.server 3503
+# Open http://localhost:3503
+```
+
+These are fully localized copies with all user-facing strings translated to Simplified Chinese and fonts updated to include Noto Sans SC. They connect to the same backend as their English counterparts.
+
 For deployed environments, both web UIs default to the current page origin as their API and WebSocket base. In practice, this means a reverse-proxied setup like `https://your-ui.example.com` can talk to the backend on the same host without setting `localStorage.API_BASE_URL`. For local development on `localhost` or `127.0.0.1`, they still default to `http://localhost:8000`.
 
 ### Option 2: Terminal CLI
@@ -196,6 +214,7 @@ echo "Explain how binary search works" | openagent --no-approval
 |---------|-------------|
 | **Developer UI** | Dark-themed chat interface with markdown, syntax highlighting, file browser, dev panel |
 | **User UI** | Light-themed (Forest Canopy) user-facing interface with activity indicators, simplified dialogs |
+| **Chinese UIs** | Fully translated Chinese versions of both Developer UI and User UI (`agent-ui-cn/`, `agent-user-ui-cn/`) |
 | **Terminal CLI** | Rich REPL with history, autocomplete, vi mode, session persistence |
 | **Google Auth** | Optional Google Sign-In for the Developer UI — enable via `GOOGLE_CLIENT_ID` |
 | **Dev panel** | Raw WebSocket frame inspector in the browser |
@@ -210,7 +229,11 @@ echo "Explain how binary search works" | openagent --no-approval
 │   agent-ui   │  │  agent-user-ui   │  │  agent-cli   │
 │  (Developer) │  │     (User)       │  │  (Terminal)  │
 │  port 3500   │  │   port 3501      │  │              │
-└──────┬───────┘  └────────┬─────────┘  └──────┬───────┘
+├──────────────┤  ├──────────────────┤  └──────┬───────┘
+│ agent-ui-cn  │  │agent-user-ui-cn  │         │
+│  (Chinese)   │  │    (Chinese)     │         │
+│  port 3502   │  │   port 3503      │         │
+└──────┬───────┘  └────────┬─────────┘         │
        │ WebSocket         │ WebSocket         │ Direct call
        └──────────┬────────┘                   │
                   └─────────────┬───────────────┘
@@ -262,6 +285,14 @@ openagent/
 │   ├── index.html
 │   ├── css/styles.css        # Forest Canopy light theme
 │   └── js/                   # ES modules (app, renderer, websocket, etc.)
+├── agent-ui-cn/        # Chinese Developer UI (translated from agent-ui)
+│   ├── index.html
+│   ├── css/styles.css        # Dark theme with Noto Sans SC
+│   └── js/                   # All user-facing strings in Chinese
+├── agent-user-ui-cn/   # Chinese User UI (translated from agent-user-ui)
+│   ├── index.html
+│   ├── css/styles.css        # Forest Canopy theme with Noto Sans SC
+│   └── js/                   # All user-facing strings in Chinese
 ├── docs/                # Translated root READMEs
 ├── .github/             # CI, issue templates, PR template
 ├── HOW_IT_WORKS.md      # Architecture guide for the runtime stack
@@ -364,6 +395,7 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for full guide
 - **Add a new LLM backend** — implement the `LLMClient` protocol in `agent/llm.py`
 - **Improve the Developer UI** — edit files in `agent-ui/` directly (no build step)
 - **Improve the User UI** — edit files in `agent-user-ui/` directly (no build step)
+- **Improve the Chinese UIs** — edit files in `agent-ui-cn/` or `agent-user-ui-cn/` (no build step)
 
 Please run the test suites before submitting (CI runs these automatically on PRs):
 
