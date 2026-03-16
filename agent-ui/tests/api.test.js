@@ -6,6 +6,16 @@ vi.mock('../js/config.js', () => ({
   WS_BASE_URL: 'ws://test:8000',
 }));
 
+// Mock the auth module (no token by default)
+vi.mock('../js/auth.js', () => ({
+  getToken: vi.fn(() => null),
+}));
+
+// Mock the state module
+vi.mock('../js/state.js', () => ({
+  emit: vi.fn(),
+}));
+
 import {
   listConversations,
   getConversation,

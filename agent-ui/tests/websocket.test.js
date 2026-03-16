@@ -6,6 +6,11 @@ vi.mock('../js/config.js', () => ({
   WS_BASE_URL: 'ws://test:8000',
 }));
 
+// Mock auth.js (no token by default)
+vi.mock('../js/auth.js', () => ({
+  getToken: vi.fn(() => null),
+}));
+
 // Mock state.js — we need a real state object and working emit/on
 const mockState = {
   conversationId: null,
@@ -95,6 +100,9 @@ describe('websocket.js', () => {
     vi.doMock('../js/config.js', () => ({
       API_BASE_URL: 'http://test:8000',
       WS_BASE_URL: 'ws://test:8000',
+    }));
+    vi.doMock('../js/auth.js', () => ({
+      getToken: vi.fn(() => null),
     }));
     vi.doMock('../js/state.js', () => ({
       state: mockState,

@@ -197,6 +197,7 @@ echo "Explain how binary search works" | openagent --no-approval
 | **Developer UI** | Dark-themed chat interface with markdown, syntax highlighting, file browser, dev panel |
 | **User UI** | Light-themed (Forest Canopy) user-facing interface with activity indicators, simplified dialogs |
 | **Terminal CLI** | Rich REPL with history, autocomplete, vi mode, session persistence |
+| **Google Auth** | Optional Google Sign-In for the Developer UI — enable via `GOOGLE_CLIENT_ID` |
 | **Dev panel** | Raw WebSocket frame inspector in the browser |
 | **LLM tracing** | See exact prompts and responses sent to the model |
 | **Presets** | Swappable system prompt personas (coding, office productivity, etc.) |
@@ -242,6 +243,7 @@ openagent/
 │   │   ├── agent/loop.py     # Core agentic loop (~1200 lines)
 │   │   ├── agent/llm.py      # Provider-agnostic LLM abstraction
 │   │   ├── agent/tools/      # All tool implementations
+│   │   ├── api/auth.py       # Optional Google OAuth authentication
 │   │   └── api/websocket.py  # WebSocket streaming handler
 │   ├── skills/               # SKILL.md expert knowledge files
 │   ├── prompts/              # PROMPT.md system prompt presets
@@ -255,7 +257,7 @@ openagent/
 ├── agent-ui/           # Developer web frontend (no build step)
 │   ├── index.html
 │   ├── css/styles.css
-│   └── js/                   # ES modules (app, renderer, websocket, etc.)
+│   └── js/                   # ES modules (app, auth, renderer, websocket, etc.)
 ├── agent-user-ui/      # User-facing web frontend (no build step)
 │   ├── index.html
 │   ├── css/styles.css        # Forest Canopy light theme
@@ -310,11 +312,12 @@ Set environment variables in `agent-api/.env`:
 | `MAX_TURNS` | `50` | Max agent loop iterations |
 | `MAX_TOKEN_BUDGET` | `200000` | Token spending limit per session |
 | `OPENAGENT_TIMEOUT` | `1800` | CLI agent loop hard timeout (seconds) |
+| `GOOGLE_CLIENT_ID` | unset | Google OAuth client ID — enables Google Sign-In on the Developer UI when set |
 
 ### Runtime Storage Notes
 
-- OpenAgent currently has no application-level authentication or user isolation.
-- Conversation history is shared at the deployment level. Any client that can reach the API can list, read, and delete conversations.
+- OpenAgent supports optional Google authentication for the Developer UI. When `GOOGLE_CLIENT_ID` is set, users must sign in with Google before accessing the app. When unset, the app works without authentication (the default).
+- Without authentication enabled, conversation history is shared at the deployment level. Any client that can reach the API can list, read, and delete conversations.
 - Workspace files are created under `WORKSPACE_DIR` and are ephemeral by design. This is intentional: the workspace is framed as a temporary execution sandbox for each session, not durable user storage.
 - After a WebSocket session disconnects, the backend schedules workspace cleanup after `WORKSPACE_CLEANUP_DELAY` seconds.
 - Conversation history is stored separately in the SQLite database (`agent.db` by default) and is not deleted by workspace cleanup.

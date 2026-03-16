@@ -58,7 +58,7 @@ from agent_service.agent.tools.todo_tools import (
     TODO_LIST_DEFINITION,
     TODOWRITE_DEFINITION,
 )
-from agent_service.api import routes, websocket
+from agent_service.api import auth, routes, websocket
 from agent_service.config import AppState, Settings
 from agent_service.database import close_db, init_db
 
@@ -168,6 +168,13 @@ async def lifespan(app: FastAPI):
 
     websocket.configure(settings, llm, skill_loader, prompt_loader, mcp_manager)
 
+    # Google Auth (optional)
+    auth.set_google_client_id(settings.google_client_id)
+    if auth.is_auth_enabled():
+        logger.info("Google Auth enabled (client_id=%s...)", settings.google_client_id[:20])
+    else:
+        logger.info("Google Auth disabled (set GOOGLE_CLIENT_ID to enable)")
+
     logger.info("Agent service ready — model=%s", settings.model)
     yield
 
@@ -196,6 +203,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Auth routes
+    app.include_router(auth.auth_router)
 
     # REST routes
     app.include_router(routes.router)

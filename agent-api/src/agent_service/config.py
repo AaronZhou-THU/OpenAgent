@@ -75,6 +75,9 @@ class Settings(BaseSettings):
     # Memory
     enable_memory: bool = True
 
+    # Google Auth (optional — empty = auth disabled)
+    google_client_id: str = ""
+
     # Database
     database_url: str = "sqlite+aiosqlite:///./agent.db"
 

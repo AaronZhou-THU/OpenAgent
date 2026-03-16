@@ -7,7 +7,7 @@ import uuid
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from agent_service.agent.prompt_loader import PromptLoader
 from agent_service.agent.skill_loader import SkillLoader
 from agent_service.agent.tools.registry import ToolRegistry
+from agent_service.api.auth import get_current_user
 from agent_service.config import Settings
 from agent_service.database import get_session
 from agent_service.models import Conversation, Message, TokenUsage
@@ -67,6 +68,7 @@ def set_tool_info(info: list[dict]) -> None:
 async def create_chat(
     req: CreateChatRequest,
     session: AsyncSession = Depends(get_session),
+    _user: dict | None = Depends(get_current_user),
 ):
     conv_id = uuid.uuid4().hex[:12]
     conv = Conversation(
@@ -88,7 +90,10 @@ async def create_chat(
 # ---------------------------------------------------------------------------
 
 @router.get("/conversations", response_model=list[ConversationInfo])
-async def list_conversations(session: AsyncSession = Depends(get_session)):
+async def list_conversations(
+    session: AsyncSession = Depends(get_session),
+    _user: dict | None = Depends(get_current_user),
+):
     result = await session.execute(
         select(
             Conversation.id,
@@ -119,6 +124,7 @@ async def list_conversations(session: AsyncSession = Depends(get_session)):
 async def get_conversation(
     conv_id: str,
     session: AsyncSession = Depends(get_session),
+    _user: dict | None = Depends(get_current_user),
 ):
     conv = await session.get(Conversation, conv_id)
     if not conv:
@@ -166,6 +172,7 @@ async def get_conversation(
 async def delete_conversation(
     conv_id: str,
     session: AsyncSession = Depends(get_session),
+    _user: dict | None = Depends(get_current_user),
 ):
     conv = await session.get(Conversation, conv_id)
     if not conv:

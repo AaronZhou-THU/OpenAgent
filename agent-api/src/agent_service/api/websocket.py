@@ -8,7 +8,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -194,11 +194,21 @@ async def _save_usage(
 
 
 @ws_router.websocket("/api/chat/{conv_id}/ws")
-async def chat_ws(ws: WebSocket, conv_id: str):
+async def chat_ws(ws: WebSocket, conv_id: str, token: str | None = Query(None)):
     if not (_settings and _client and _skill_loader):
         raise RuntimeError("WebSocket handler not configured")
 
     await ws.accept()
+
+    # Verify auth token if auth is enabled
+    from agent_service.api.auth import verify_ws_token
+
+    try:
+        await verify_ws_token(token)
+    except ValueError as e:
+        await ws.send_json({"type": "error", "message": f"Authentication failed: {e}"})
+        await ws.close(code=4001, reason=str(e))
+        return
 
     # Verify conversation exists
     async with db.async_session_factory() as session:

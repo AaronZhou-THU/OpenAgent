@@ -24,6 +24,15 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <!-- Login overlay (shown when Google Auth is enabled and user is not signed in) -->
+  <div id="login-overlay" class="login-overlay hidden">
+    <div class="login-modal">
+      <h1 class="login-title">Agent Chat</h1>
+      <p class="login-subtitle">Sign in to continue</p>
+      <div id="google-signin-btn" class="google-signin-container"></div>
+    </div>
+  </div>
+
   <div id="app">
     <!-- Sidebar -->
     <aside id="sidebar">
@@ -35,6 +44,12 @@
         <button id="new-chat-btn" title="New Chat">+ New Chat</button>
       </div>
       <div id="conversation-list" class="conversation-list"></div>
+      <!-- User profile (shown when authenticated) -->
+      <div id="user-profile" class="user-profile hidden">
+        <img id="user-avatar" class="user-avatar" src="" alt="User avatar">
+        <span id="user-name" class="user-name"></span>
+        <button id="sign-out-btn" class="sign-out-btn" title="Sign out">Sign out</button>
+      </div>
     </aside>
 
     <!-- Main Chat Area -->

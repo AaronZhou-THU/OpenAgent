@@ -1,4 +1,5 @@
 import { WS_BASE_URL } from './config.js';
+import { getToken } from './auth.js';
 import { state, emit } from './state.js';
 
 let ws = null;
@@ -14,7 +15,11 @@ export function connect(conversationId) {
 
 function _doConnect(conversationId) {
   emit('ws:connecting');
-  const url = `${WS_BASE_URL}/api/chat/${conversationId}/ws`;
+  let url = `${WS_BASE_URL}/api/chat/${conversationId}/ws`;
+  const token = getToken();
+  if (token) {
+    url += `?token=${encodeURIComponent(token)}`;
+  }
   ws = new WebSocket(url);
 
   ws.onopen = () => {
