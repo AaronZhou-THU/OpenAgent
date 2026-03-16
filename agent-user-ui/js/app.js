@@ -1,4 +1,5 @@
 import './filepanel.js';
+import * as auth from './auth.js';
 import { state, on, emit, resetConversationState } from './state.js';
 import * as api from './api.js';
 import * as ws from './websocket.js';
@@ -41,6 +42,17 @@ let _presets = [];
 async function init() {
   bindUI();
   bindEvents();
+
+  // Check if auth is required
+  const authEnabled = await auth.init();
+  if (authEnabled) {
+    if (!auth.isAuthenticated()) {
+      showLoginOverlay();
+      return; // Wait for sign-in before loading app
+    }
+    showUserProfile(auth.getUser());
+  }
+
   await Promise.all([loadConversations(), loadPresets()]);
 }
 
@@ -182,6 +194,23 @@ function bindEvents() {
   });
 
   on('ws:event', handleServerEvent);
+
+  // Auth events
+  on('auth:changed', async ({ authenticated, user }) => {
+    if (authenticated) {
+      hideLoginOverlay();
+      showUserProfile(user);
+      await Promise.all([loadConversations(), loadPresets()]);
+    } else {
+      showLoginOverlay();
+      hideUserProfile();
+    }
+  });
+  on('auth:expired', () => {
+    auth.signOut();
+    showLoginOverlay();
+    hideUserProfile();
+  });
 }
 
 // ===== Conversation management =====
@@ -468,6 +497,39 @@ function handleServerEvent(event) {
     default:
       console.log('Unhandled event:', event.type);
   }
+}
+
+// ===== Auth UI =====
+
+function showLoginOverlay() {
+  const overlay = document.getElementById('login-overlay');
+  overlay.classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+  auth.renderSignInButton(document.getElementById('google-signin-btn'));
+}
+
+function hideLoginOverlay() {
+  document.getElementById('login-overlay').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+}
+
+function showUserProfile(user) {
+  if (!user) return;
+  const profile = document.getElementById('user-profile');
+  const avatar = document.getElementById('user-avatar');
+  const name = document.getElementById('user-name');
+  avatar.src = user.picture || '';
+  avatar.alt = user.name || 'User';
+  name.textContent = user.name || user.email || '';
+  profile.classList.remove('hidden');
+
+  // Bind sign-out (only once)
+  const signOutBtn = document.getElementById('sign-out-btn');
+  signOutBtn.onclick = () => auth.signOut();
+}
+
+function hideUserProfile() {
+  document.getElementById('user-profile').classList.add('hidden');
 }
 
 // ===== Boot =====

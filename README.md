@@ -216,7 +216,7 @@ echo "Explain how binary search works" | openagent --no-approval
 | **User UI** | Light-themed (Forest Canopy) user-facing interface with activity indicators, simplified dialogs |
 | **Chinese UIs** | Fully translated Chinese versions of both Developer UI and User UI (`agent-ui-cn/`, `agent-user-ui-cn/`) |
 | **Terminal CLI** | Rich REPL with history, autocomplete, vi mode, session persistence |
-| **Google Auth** | Optional Google Sign-In for the Developer UI — enable via `GOOGLE_CLIENT_ID` |
+| **Google Auth** | Optional Google Sign-In for both Developer UI and User UI — enable via `GOOGLE_CLIENT_ID` |
 | **Dev panel** | Raw WebSocket frame inspector in the browser |
 | **LLM tracing** | See exact prompts and responses sent to the model |
 | **Presets** | Swappable system prompt personas (coding, office productivity, etc.) |
@@ -343,11 +343,12 @@ Set environment variables in `agent-api/.env`:
 | `MAX_TURNS` | `50` | Max agent loop iterations |
 | `MAX_TOKEN_BUDGET` | `200000` | Token spending limit per session |
 | `OPENAGENT_TIMEOUT` | `1800` | CLI agent loop hard timeout (seconds) |
-| `GOOGLE_CLIENT_ID` | unset | Google OAuth client ID — enables Google Sign-In on the Developer UI when set |
+| `GOOGLE_CLIENT_ID` | unset | Google OAuth client ID — enables Google Sign-In on both web UIs when set |
 
 ### Runtime Storage Notes
 
-- OpenAgent supports optional Google authentication for the Developer UI. When `GOOGLE_CLIENT_ID` is set, users must sign in with Google before accessing the app. When unset, the app works without authentication (the default).
+- OpenAgent supports optional Google authentication for both web UIs (Developer UI and User UI). When `GOOGLE_CLIENT_ID` is set, users must sign in with Google before accessing either app. When unset, both apps work without authentication (the default).
+- **Planned: WeChat authentication** for `agent-user-ui-cn` — the Chinese User UI will support WeChat-based sign-in as an alternative to Google Auth for users in China where Google services are unavailable. (Not yet implemented.)
 - Without authentication enabled, conversation history is shared at the deployment level. Any client that can reach the API can list, read, and delete conversations.
 - Workspace files are created under `WORKSPACE_DIR` and are ephemeral by design. This is intentional: the workspace is framed as a temporary execution sandbox for each session, not durable user storage.
 - After a WebSocket session disconnects, the backend schedules workspace cleanup after `WORKSPACE_CLEANUP_DELAY` seconds.

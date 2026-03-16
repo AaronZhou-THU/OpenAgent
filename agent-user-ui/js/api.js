@@ -1,10 +1,26 @@
 import { API_BASE_URL } from './config.js';
+import { getToken } from './auth.js';
+import { emit } from './state.js';
 
 async function request(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+
+  // Attach Google auth token if available
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers,
     ...options,
   });
+
+  if (res.status === 401) {
+    emit('auth:expired');
+    throw new Error('Authentication required');
+  }
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`API ${res.status}: ${text}`);
@@ -65,10 +81,20 @@ export async function uploadWorkspaceFiles(files, subdir = '') {
   const form = new FormData();
   for (const f of files) form.append('files', f);
   const qs = subdir ? `?subdir=${encodeURIComponent(subdir)}` : '';
+  const headers = {};
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   const res = await fetch(`${API_BASE_URL}/api/workspace/upload${qs}`, {
     method: 'POST',
+    headers,
     body: form,
   });
+  if (res.status === 401) {
+    emit('auth:expired');
+    throw new Error('Authentication required');
+  }
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`API ${res.status}: ${text}`);
