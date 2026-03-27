@@ -256,6 +256,153 @@ echo "Explain how binary search works" | openagent --no-approval
 
 More backend architecture detail lives in [agent-api/README.md](agent-api/README.md) and [agent-api/CLAUDE.md](agent-api/CLAUDE.md).
 
+## Planned: Agent-Facing Tool Discovery
+
+Today the backend passes the current tool definitions to the model on every turn, then executes any returned tool calls in the loop. That keeps the implementation simple and preserves native provider tool-calling, but it becomes less attractive as the tool catalog grows, especially with MCP.
+
+The intended evolution is a retrieval-then-bind design. The model should still use native tool-calling, but it should not see the full executable catalog on every turn. Instead, the server maintains four logical buckets for each conversation:
+
+- **Bootstrap tools**: always bound because they are universal workspace or control-plane primitives. Recommended baseline: `think`, `read_file`, `search_code`, `bash`, `task`, and `compact`.
+- **Discovery tools**: always bound because they help the model inspect the catalog and manage exposure. Planned examples: `search_tools`, `describe_tool`, `activate_tools`, `deactivate_tools`.
+- **Active tools**: a small, dynamic subset of executable tools chosen for the current task after discovery.
+- **Catalog metadata**: a server-side searchable index over every registered built-in and MCP tool, including names, descriptions, source, tags, safety hints, and input-schema summaries.
+
+The server-side state becomes:
+
+- `bootstrap_tool_names`
+- `discovery_tool_names`
+- `active_tool_names`
+- `tool_catalog`
+- optional `recent_tool_usage` for ranking and eviction heuristics
+
+Per turn, the loop would compute the provider-facing tool list as `bootstrap + discovery + active_tools`, not the whole registry. The registry still contains every handler, and execution still goes through the same native tool path once a tool is active.
+
+Recommended turn flow:
+
+1. Start a conversation with bootstrap + discovery tools only.
+2. The model explores the repo with always-on primitives such as `read_file`, `search_code`, and `bash`.
+3. When it needs a more specific capability, it calls `search_tools(query=...)` to retrieve candidate tools from the server-side catalog.
+4. If needed, it calls `describe_tool(name=...)` to inspect one tool more deeply, including argument shape and intended usage.
+5. It calls `activate_tools(names=[...])` to bind a narrow working set.
+6. On the next LLM call, the loop passes only `bootstrap + discovery + active_tools` to the provider.
+7. The model now calls those real tools through normal provider-native tool-calling, preserving schema validation and parallel execution.
+8. The server may auto-evict inactive tools after a few turns, enforce a maximum active-set size, or let the model explicitly call `deactivate_tools(names=[...])`.
+
+This pattern preserves the good parts of the current implementation:
+
+- per-tool JSON schema exposure stays intact
+- provider-side structured argument validation still works
+- parallel tool execution still works naturally
+- tool approval remains precise because the UI still sees the real tool name, not a generic wrapper
+
+The recommended bootstrap set is intentionally opinionated:
+
+- `read_file` should stay bootstrap because it is the most common grounding primitive and is often useful before any catalog search.
+- `bash` should stay bootstrap because repo exploration and verification frequently depend on shell commands such as `ls`, `rg`, `git status`, and tests. Availability does not weaken safety because approval gating remains separate.
+- `task` should stay bootstrap because it is a coordination primitive, not a long-tail domain tool. The lead agent may need delegation before it knows which specific tools matter.
+
+Subagents should inherit a smaller bootstrap set and should continue to exclude `task`, matching the current design where subagents cannot recursively spawn more subagents.
+
+The preferred implementation is **not** a generic `execute_tool(name, args)` wrapper. That would hide per-tool schemas from the model, weaken argument generation, reduce provider-side validation, collapse approval UX into one opaque tool, and make parallel execution less natural. Discovery should narrow which real tools are exposed, not replace native tool-calling itself.
+
+Practical implementation notes:
+
+- `search_tools` can start with lexical ranking over tool name, description, tags, MCP server name, and input field names.
+- `describe_tool` should return richer metadata than `search_tools`, but still not necessarily the full raw schema unless requested.
+- `activate_tools` should validate names against the catalog and update per-conversation state rather than mutating the global registry.
+- The loop should continue to use the full `ToolRegistry` for execution; only the provider-facing `tools=` payload should be narrowed.
+- Server-side heuristics can pre-bind a few likely tools from the first user request, but the default should remain conservative.
+
+## Planned: Skill Retrieval And Pinning
+
+Skills need a parallel redesign once the catalog grows past a few dozen entries. The current model works for a small skill set, but it scales poorly when users install 50+ skills:
+
+- the system prompt currently embeds a flat description list for all skills
+- `list_skills` is a text dump rather than a ranked retrieval tool
+- `read_skill` injects one full `SKILL.md` body into the transcript
+- there is no first-class support for selecting, combining, and reusing multiple related skills
+
+The intended evolution is `retrieve -> summarize -> pin`, rather than `list -> read one full skill`. The model should not browse a giant flat catalog every turn. Instead, it should work with a searchable skill index and a small set of active skill summaries.
+
+The server-side state becomes:
+
+- `skill_catalog`: all skills with structured metadata
+- `active_skills`: currently pinned skills for the conversation
+- `recent_skill_usage`: which skills were loaded, reused, or ignored
+- `skill_summary_cache`: compact reusable summaries for loaded skills
+- optional `skill_groups`: known complementary bundles of related skills
+
+Recommended always-available skill tools:
+
+- `search_skills(query, limit?, tags?, include_related?, include_bundles?)`
+- `describe_skill(skill, detail?)`
+- `load_skills(skills[])`
+- `pin_skills(skills[])`
+- `unpin_skills(skills[])`
+- `list_active_skills()`
+
+Recommended flow:
+
+1. Keep only a short prompt instruction that skills exist and can be searched and loaded when relevant.
+2. Let the model call `search_skills(query=...)` instead of scanning a flat catalog dump.
+3. Return ranked candidates with metadata such as name, short description, why it matched, tags/domains, estimated token cost, and related skills.
+4. Let the model call `describe_skill(...)` for a richer summary when needed.
+5. Let the model call `load_skills(["skill-a", "skill-b"])` when complementary skills are needed together.
+6. Convert loaded skills into compact normalized summaries and keep those summaries pinned across turns.
+7. During compaction, preserve the active skill summaries and rationale for loading them, but drop full raw skill bodies unless they are still essential.
+
+This is intentionally optimized for multi-skill usage. The model should be able to load more than one skill at once when the task naturally spans domains, for example:
+
+- browser automation + screenshots
+- Gradio UI + Hugging Face Jobs
+- PDF generation + DOCX handling
+- API documentation + speech generation
+
+To support that, the retrieval layer should not just rank single skills. It should also surface complementary matches and optional bundles. A good `search_skills` result should be able to say:
+
+- primary skill
+- complementary skills
+- reason the combination is useful
+
+This reduces the chance that the model locks onto one plausible skill and misses a second relevant one.
+
+The skill catalog needs richer metadata than the current `name + description` model. Recommended frontmatter additions:
+
+- `tags`
+- `domains`
+- `triggers`
+- `when_to_use`
+- `when_not_to_use`
+- `related_skills`
+- `examples`
+- `summary`
+- `token_budget`
+
+Ranking can start simple and still work well:
+
+- lexical match on skill name and description
+- tag/domain overlap
+- trigger phrase overlap
+- related-skill co-occurrence
+- workspace/task-aware reranking based on repo contents or recent tool usage
+- prior successful use earlier in the same conversation
+
+The most important context rule is to avoid injecting full skill bodies into the rolling transcript by default. Skill loading should be layered:
+
+- Layer 1: search result
+- Layer 2: summarized skill description with workflow and resources
+- Layer 3: full raw `SKILL.md` body only when explicitly needed
+
+The preferred design keeps compact skill summaries pinned in conversation state. Each pinned summary should include:
+
+- skill name
+- one-sentence purpose
+- key workflow steps
+- scripts/resources available
+- constraints or caveats
+
+That lets the model keep using a skill across many turns without paying the full token cost every time.
+
 ## Project Structure
 
 ```
