@@ -485,7 +485,7 @@ Set environment variables in `agent-api/.env`:
 | `OPENAI_API_KEY` | (required for OpenAI) | Your OpenAI API key |
 | `OPENAI_BASE_URL` | unset | Optional OpenAI-compatible endpoint |
 | `MODEL` | `claude-sonnet-4-5-20250929` | Default model |
-| `WORKSPACE_DIR` | `workspace` | Where agent files are created |
+| `WORKSPACE_DIR` | `workspace` | Workspace root for agent-created files and command execution |
 | `ENABLE_MEMORY` | `true` | Cross-session memory |
 | `MAX_TURNS` | `50` | Max agent loop iterations |
 | `MAX_TOKEN_BUDGET` | `200000` | Token spending limit per session |
@@ -497,9 +497,48 @@ Set environment variables in `agent-api/.env`:
 - OpenAgent supports optional Google authentication for both web UIs (Developer UI and User UI). When `GOOGLE_CLIENT_ID` is set, users must sign in with Google before accessing either app. When unset, both apps work without authentication (the default).
 - **Planned: WeChat authentication** for `agent-user-ui-cn` — the Chinese User UI will support WeChat-based sign-in as an alternative to Google Auth for users in China where Google services are unavailable. (Not yet implemented.)
 - Without authentication enabled, conversation history is shared at the deployment level. Any client that can reach the API can list, read, and delete conversations.
-- Workspace files are created under `WORKSPACE_DIR` and are ephemeral by design. This is intentional: the workspace is framed as a temporary execution sandbox for each session, not durable user storage.
+- Workspace files are created under `WORKSPACE_DIR` and are ephemeral by design. The workspace is a host-side working directory boundary, not a container or VM sandbox, so it should not be treated as strong isolation.
 - After a WebSocket session disconnects, the backend schedules workspace cleanup after `WORKSPACE_CLEANUP_DELAY` seconds.
 - Conversation history is stored separately in the SQLite database (`agent.db` by default) and is not deleted by workspace cleanup.
+
+### Execution Model: Workspace vs Sandbox
+
+OpenAgent currently uses a **workspace-scoped execution model**.
+
+That means:
+
+- File tools such as `read_file`, `write_file`, and `edit_file` are restricted to paths under `WORKSPACE_DIR`.
+- Shell commands from the `bash` tool run with `WORKSPACE_DIR` as the current working directory.
+- Agent-created files, uploaded files, transcripts, memory, and task artifacts all live under that same workspace tree.
+
+That does **not** mean:
+
+- commands are isolated from the host OS
+- commands run inside Docker, a VM, or a separate container namespace
+- network access is blocked
+- CPU or memory use is container-limited
+- users are isolated from each other by default
+
+In other words, the workspace is a **directory boundary**, not a **security boundary**.
+
+Today the backend provides some guardrails:
+
+- file tools reject paths that escape the workspace
+- bash commands use a timeout
+- dangerous shell patterns are filtered
+- an optional `ALLOWED_COMMANDS` allowlist can restrict which programs may run
+
+Those guardrails are useful for local development and learning, but they are not equivalent to a real sandbox.
+
+For stronger isolation in hosted deployments, prefer a Docker- or VM-based runner with these properties:
+
+- one container or VM per session, conversation, or run
+- a dedicated workspace mounted into that sandbox
+- resource limits for CPU, memory, and wall-clock time
+- optional outbound network restrictions
+- teardown after completion, while preserving selected artifacts outside the sandbox
+
+If you adopt that model, `WORKSPACE_DIR` still matters, but it becomes the mounted project root **inside** the sandbox rather than the host execution boundary itself.
 
 ### Using different LLM backends
 

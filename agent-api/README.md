@@ -166,6 +166,50 @@ docker compose up --build
 - Conversation history is stored in the SQL database configured by `DATABASE_URL` (`agent.db` by default) and is not removed by workspace cleanup.
 - Without app-level authentication, conversations are global to the deployment rather than user-scoped.
 
+## Execution Isolation
+
+OpenAgent currently uses a **workspace-based execution model**, not a full sandbox.
+
+### What the current model does
+
+- File tools are constrained to paths inside `WORKSPACE_DIR`.
+- Shell commands run with `WORKSPACE_DIR` as their working directory.
+- Workspace cleanup removes generated files after a delay, while preserving memory and task metadata directories.
+- The workspace provides a clear place to inspect agent-created artifacts during and after a run.
+
+### What the current model does not do
+
+- It does not run tool commands inside Docker or a VM by default.
+- It does not isolate the process from the host operating system.
+- It does not provide container-level CPU, memory, filesystem, or network isolation.
+- It does not create per-user security boundaries on its own.
+
+So `WORKSPACE_DIR` should be understood as a **working directory root** for tool execution, not as a hardened sandbox boundary.
+
+### Current safety mechanisms
+
+- File-path validation prevents `read_file`, `write_file`, and `edit_file` from escaping the workspace.
+- Bash commands have a timeout via `BASH_TIMEOUT`.
+- Known dangerous shell patterns are blocked.
+- `ALLOWED_COMMANDS` can be used to enforce an explicit command allowlist.
+- Optional human approval can gate tool execution before side-effecting operations run.
+
+These controls are useful for local development, demos, and trusted environments, but they are still weaker than real container isolation.
+
+### Recommended production model
+
+For stronger isolation in hosted environments, run tools inside a per-session Docker or VM sandbox and mount a dedicated workspace into that sandbox.
+
+A typical production shape is:
+
+- create one sandbox per session, conversation, or run
+- mount a dedicated workspace volume into the sandbox
+- execute shell commands, background jobs, and code edits inside that sandbox
+- enforce CPU, memory, time, and optionally network limits
+- persist selected artifacts outside the sandbox before teardown
+
+In that model, `WORKSPACE_DIR` remains useful, but it becomes the mounted root **inside** the sandbox rather than the host execution boundary.
+
 ## API Reference
 
 ### REST Endpoints
@@ -432,7 +476,7 @@ All settings via environment variables or `.env`:
 | `LLM_RETRY_MAX_DELAY` | `30.0` | Maximum delay in seconds between retries |
 | `SKILLS_DIR` | `skills` | Path to skills directory |
 | `PROMPTS_DIR` | `prompts` | Path to prompt presets directory |
-| `WORKSPACE_DIR` | `workspace` | Sandbox root for file tools |
+| `WORKSPACE_DIR` | `workspace` | Workspace root for file tools and command execution |
 | `WORKSPACE_CLEANUP_DELAY` | `300` | Seconds before workspace cleanup after session ends |
 | `BASH_TIMEOUT` | `60` | Seconds before bash commands timeout |
 | `BACKGROUND_TIMEOUT` | `300` | Max seconds for background commands |

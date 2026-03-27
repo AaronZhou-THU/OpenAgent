@@ -77,6 +77,50 @@ cd ../agent-cli
 - `../agent-user-ui/` — simplified user-facing chat frontend (Forest Canopy theme, no build step)
 - `../agent-cli/` — terminal CLI (`openagent` command, prompt-toolkit REPL)
 
+## Execution Isolation
+
+OpenAgent currently uses a **workspace-based execution model**, not a full container or VM sandbox.
+
+### What the current model does
+
+- File tools are constrained to paths inside `WORKSPACE_DIR`.
+- Shell commands run with `WORKSPACE_DIR` as their current working directory.
+- Agent-created files, uploads, transcripts, memory, tasks, and team metadata all live under the workspace tree.
+- Deferred cleanup removes most generated workspace files after a session ends, while preserving selected internal directories such as `.agent/`, `.tasks/`, `.transcripts/`, and `.team/`.
+
+This makes the workspace the operational root for the agent's artifacts and local file interactions.
+
+### What the current model does not do
+
+- It does not run commands inside Docker by default.
+- It does not isolate execution from the host operating system.
+- It does not provide container-level filesystem, CPU, memory, or network isolation.
+- It does not create strong per-user or per-tenant security boundaries on its own.
+
+So the workspace should be understood as a **directory boundary** for tools, not a hardened **security boundary**.
+
+### Current safety mechanisms
+
+- `agent/tools/file_tools.py` validates paths and rejects traversal or symlink escapes outside the workspace.
+- `agent/tools/bash_tool.py` applies a timeout and blocks known dangerous shell patterns.
+- `ALLOWED_COMMANDS` can restrict shell execution to an explicit allowlist.
+- Tool approval can require user confirmation before side-effecting operations run.
+- Hidden internal workspace directories are excluded from normal file listing and download flows.
+
+These controls reduce accidental damage and make local use safer, but they are still weaker than true sandboxing because commands continue to run on the host process.
+
+### Recommended production model
+
+For stronger isolation in hosted environments, the preferred design is a **sandbox runner**:
+
+- create one Docker container or VM per session, conversation, or run
+- mount a dedicated workspace into that sandbox
+- execute shell commands, background jobs, and code edits inside the sandbox
+- apply CPU, memory, wall-clock, and optionally network restrictions
+- persist selected artifacts outside the sandbox before teardown
+
+Under that model, `WORKSPACE_DIR` still matters, but it becomes the mounted project root **inside** the sandbox rather than the host execution boundary itself.
+
 ## CLI (`../agent-cli/`)
 
 Rich terminal interface for the agent service. Binary: `openagent`. Python package: `agent_cli`.
@@ -339,6 +383,7 @@ pre-commit run --all-files
 
 ## Security Hardening
 
+- The current protections are **guardrails on host execution**, not a substitute for container or VM isolation. For untrusted or multi-tenant hosted use, add a real sandbox layer.
 - **Command injection**: `bash_tool.py` blocks dangerous patterns including `$(...)` command substitution, backtick expansion, `$((...))` arithmetic, and environment variable injection
 - **Path traversal**: `file_tools.py` `_safe_path()` validates every intermediate path component for symlinks escaping workspace, rejects null bytes, and resolves all paths before access
 - **XSS prevention**: All markdown rendering (marked.js) in the frontend is sanitized through DOMPurify before DOM insertion (`markdown.js`, `filepanel.js`, `app.js`)
