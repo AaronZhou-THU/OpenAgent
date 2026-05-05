@@ -120,6 +120,28 @@ For a pinned install:
 pip install openagent-app==0.1.1
 ```
 
+Minimum requirements to run the packaged CLI:
+
+- Python 3.11+
+- an LLM provider API key
+- provider environment variables, for example DeepSeek V4:
+
+```bash
+export LLM_PROVIDER=anthropic
+export ANTHROPIC_API_KEY=your-key
+export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
+export MODEL=deepseek-v4-pro
+export SUBAGENT_MODEL=deepseek-v4-flash
+export TEAMMATE_MODEL=deepseek-v4-flash
+export COMPACT_MODEL=deepseek-v4-flash
+```
+
+Then run:
+
+```bash
+openagent --thinking --thinking-effort max
+```
+
 ### Option 1a: Developer Web UI
 
 ```bash
