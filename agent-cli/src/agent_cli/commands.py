@@ -33,6 +33,8 @@ class CommandResult:
     plan_mode: bool | None = None  # None=no change, True=enter, False=exit
     teams: bool | None = None      # None=no change, True=enable, False=disable
     approval: bool | None = None   # None=no change, True=enable, False=disable
+    thinking: bool | None = None   # None=no change, True=enable, False=disable
+    thinking_effort: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +52,8 @@ class CommandContext:
     session_id: str
     model: str
     preset: str
+    thinking_enabled: bool = False
+    thinking_effort: str = "high"
 
 
 # ---------------------------------------------------------------------------
@@ -247,3 +251,34 @@ async def _cmd_approval(ctx: CommandContext, args: list[str]) -> CommandResult:
     label = "[bold green]on[/bold green]" if enable else "[dim]off[/dim]"
     console.print(f"  [bold orange3]Approval {label}[/bold orange3]")
     return CommandResult(approval=enable)
+
+
+@register("thinking", "Show or set provider thinking (on/off/high/max)")
+async def _cmd_thinking(ctx: CommandContext, args: list[str]) -> CommandResult:
+    if not args:
+        enabled = "[bold green]on[/bold green]" if ctx.thinking_enabled else "[dim]off[/dim]"
+        console.print(
+            f"  [bright_black]Thinking[/bright_black] {enabled}"
+            f"  [dim]level: {escape(ctx.thinking_effort)}[/dim]"
+        )
+        return CommandResult()
+
+    arg = args[0].lower()
+    if arg in ("on", "enable", "enabled", "true"):
+        console.print(
+            f"  [bright_black]Thinking[/bright_black] [bold green]on[/bold green]"
+            f"  [dim]level: {escape(ctx.thinking_effort)}[/dim]"
+        )
+        return CommandResult(thinking=True)
+    if arg in ("off", "disable", "disabled", "false"):
+        console.print("  [bright_black]Thinking[/bright_black] [dim]off[/dim]")
+        return CommandResult(thinking=False)
+    if arg in ("high", "max"):
+        console.print(
+            f"  [bright_black]Thinking[/bright_black] [bold green]on[/bold green]"
+            f"  [dim]level: {escape(arg)}[/dim]"
+        )
+        return CommandResult(thinking=True, thinking_effort=arg)
+
+    console.print("  [dim]Usage: /thinking on | /thinking off | /thinking high | /thinking max[/dim]")
+    return CommandResult()

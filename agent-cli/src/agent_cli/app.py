@@ -307,6 +307,8 @@ async def run_repl(args) -> None:
         session_id=session_meta.id,
         model=settings.model,
         preset=preset,
+        thinking_enabled=settings.thinking_enabled,
+        thinking_effort=settings.thinking_effort,
     )
 
     # ---- Banner ----
@@ -424,6 +426,14 @@ async def run_repl(args) -> None:
                         approval_queue = None
                         approval_handler = None
                         _raw_send_event = make_send_event(None, cost_tracker)
+                    continue
+                if cmd_result.thinking is not None or cmd_result.thinking_effort is not None:
+                    if cmd_result.thinking is not None:
+                        settings.thinking_enabled = cmd_result.thinking
+                        cmd_ctx.thinking_enabled = cmd_result.thinking
+                    if cmd_result.thinking_effort is not None:
+                        settings.thinking_effort = cmd_result.thinking_effort
+                        cmd_ctx.thinking_effort = cmd_result.thinking_effort
                     continue
                 if cmd_result.compact:
                     # Send compact as a user message to trigger manual compaction

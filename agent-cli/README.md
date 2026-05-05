@@ -17,5 +17,15 @@ thinking_effort = "max"
 
 When enabled, the CLI prints provider thinking before the assistant reply and keeps normal reply streaming behavior intact.
 
+During an interactive session, use slash commands to change it without restarting:
+
+```text
+/thinking
+/thinking on
+/thinking off
+/thinking high
+/thinking max
+```
+
 For the full project overview, setup guide, and architecture notes, see the repository
 root [README](../README.md).

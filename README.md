@@ -189,6 +189,8 @@ Provider thinking can be shown in the terminal before replies:
 openagent --thinking --thinking-effort max
 ```
 
+Inside the interactive CLI, use `/thinking`, `/thinking on`, `/thinking off`, `/thinking high`, or `/thinking max` to change provider thinking without restarting.
+
 ## Features
 
 ### Core

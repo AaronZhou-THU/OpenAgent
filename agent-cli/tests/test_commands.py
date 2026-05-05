@@ -31,6 +31,8 @@ def ctx(tmp_path, store) -> CommandContext:
         session_id=meta.id,
         model="claude-sonnet-4-5-20250929",
         preset="coding",
+        thinking_enabled=False,
+        thinking_effort="high",
     )
 
 
@@ -102,7 +104,18 @@ class TestGetCommands:
 
     def test_has_all_expected_commands(self):
         cmds = get_commands()
-        expected = {"help", "clear", "compact", "model", "history", "resume", "cost", "quit", "exit"}
+        expected = {
+            "help",
+            "clear",
+            "compact",
+            "model",
+            "history",
+            "resume",
+            "cost",
+            "quit",
+            "exit",
+            "thinking",
+        }
         assert expected.issubset(set(cmds.keys()))
 
 
@@ -201,3 +214,43 @@ class TestApprovalCommand:
         with patch("agent_cli.commands.console"):
             result = await dispatch("/approval yes", ctx)
         assert result.approval is None
+
+
+class TestThinkingCommand:
+    """Test /thinking command."""
+
+    async def test_thinking_no_args_shows_current(self, ctx):
+        with patch("agent_cli.commands.console"):
+            result = await dispatch("/thinking", ctx)
+        assert result.thinking is None
+        assert result.thinking_effort is None
+
+    async def test_thinking_on(self, ctx):
+        with patch("agent_cli.commands.console"):
+            result = await dispatch("/thinking on", ctx)
+        assert result.thinking is True
+        assert result.thinking_effort is None
+
+    async def test_thinking_off(self, ctx):
+        with patch("agent_cli.commands.console"):
+            result = await dispatch("/thinking off", ctx)
+        assert result.thinking is False
+        assert result.thinking_effort is None
+
+    async def test_thinking_high_sets_level_and_enables(self, ctx):
+        with patch("agent_cli.commands.console"):
+            result = await dispatch("/thinking high", ctx)
+        assert result.thinking is True
+        assert result.thinking_effort == "high"
+
+    async def test_thinking_max_sets_level_and_enables(self, ctx):
+        with patch("agent_cli.commands.console"):
+            result = await dispatch("/thinking max", ctx)
+        assert result.thinking is True
+        assert result.thinking_effort == "max"
+
+    async def test_thinking_invalid_arg_shows_usage(self, ctx):
+        with patch("agent_cli.commands.console"):
+            result = await dispatch("/thinking medium", ctx)
+        assert result.thinking is None
+        assert result.thinking_effort is None
