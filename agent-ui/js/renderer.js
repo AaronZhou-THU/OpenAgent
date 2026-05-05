@@ -7,6 +7,8 @@ const welcomeEl = document.getElementById('welcome');
 // Track current streaming state
 let currentAssistantGroup = null;
 let currentTextBlock = null;
+let currentThinkingBlock = null;
+let currentThinkingText = '';
 let textBuffer = '';
 let renderScheduled = false;
 
@@ -179,13 +181,35 @@ export function appendTextDelta(text) {
 }
 
 export function appendThinking(content, effort = '') {
+  const replyBlock = currentTextBlock;
   finalizeTextBlock();
 
   if (!currentAssistantGroup) {
     startAssistantMessage();
   }
 
-  currentAssistantGroup.appendChild(createThinkingBlock(content, effort));
+  currentThinkingText = content;
+  if (!currentThinkingBlock) {
+    currentThinkingBlock = createThinkingBlock(content, effort);
+    insertThinkingBlock(currentThinkingBlock, replyBlock);
+  } else {
+    updateThinkingBlock(currentThinkingBlock, currentThinkingText);
+  }
+  scrollToBottom();
+}
+
+export function appendThinkingDelta(content, effort = '') {
+  if (!currentAssistantGroup) {
+    startAssistantMessage();
+  }
+
+  currentThinkingText += content;
+  if (!currentThinkingBlock) {
+    currentThinkingBlock = createThinkingBlock(currentThinkingText, effort);
+    insertThinkingBlock(currentThinkingBlock, currentTextBlock);
+  } else {
+    updateThinkingBlock(currentThinkingBlock, currentThinkingText);
+  }
   scrollToBottom();
 }
 
@@ -362,6 +386,8 @@ export function appendCompactNotice(message) {
 export function finishAssistantMessage() {
   finalizeTextBlock();
   currentAssistantGroup = null;
+  currentThinkingBlock = null;
+  currentThinkingText = '';
 }
 
 export function renderInterruptNotice() {
@@ -514,7 +540,25 @@ export function clearMessages() {
   messagesEl.appendChild(welcomeEl);
   currentAssistantGroup = null;
   currentTextBlock = null;
+  currentThinkingBlock = null;
+  currentThinkingText = '';
   textBuffer = '';
+}
+
+function insertThinkingBlock(thinkingBlock, replyBlock = null) {
+  const firstReplyBlock = replyBlock?.parentNode === currentAssistantGroup
+    ? replyBlock
+    : currentAssistantGroup.querySelector('.message-content, .assistant-content');
+  if (firstReplyBlock) {
+    currentAssistantGroup.insertBefore(thinkingBlock, firstReplyBlock);
+  } else {
+    currentAssistantGroup.appendChild(thinkingBlock);
+  }
+}
+
+function updateThinkingBlock(block, content) {
+  const pre = block.querySelector('pre');
+  if (pre) pre.textContent = content;
 }
 
 function scrollToBottom() {

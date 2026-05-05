@@ -7,6 +7,8 @@ const welcomeEl = document.getElementById('welcome');
 // Track current streaming state
 let currentAssistantGroup = null;
 let currentTextBlock = null;
+let currentThinkingBlock = null;
+let currentThinkingText = '';
 let textBuffer = '';
 let renderScheduled = false;
 
@@ -181,18 +183,29 @@ function renderAssistantFromHistory(content) {
 
   const blocks = Array.isArray(content) ? content : [{ type: 'text', text: String(content) }];
 
-  // Collect only text blocks (skip tool_use)
+  // Collect text and provider thinking blocks (skip tool_use)
   let fullText = '';
+  const thinkingBlocks = [];
   for (const block of blocks) {
     if (block.type === 'text' && block.text?.trim()) {
       fullText += (fullText ? '\n\n' : '') + block.text;
+    } else if (block.type === 'thinking') {
+      const thinking = block.thinking || block.text || '';
+      if (thinking.trim()) thinkingBlocks.push(thinking);
     }
   }
 
-  if (!fullText.trim()) return;
+  if (!fullText.trim() && thinkingBlocks.length === 0) return;
 
   const group = document.createElement('div');
   group.className = 'message-group assistant';
+  for (const thinking of thinkingBlocks) {
+    group.appendChild(createThinkingBlock(thinking));
+  }
+  if (!fullText.trim()) {
+    messagesEl.appendChild(group);
+    return;
+  }
   const contentEl = document.createElement('div');
   contentEl.className = 'assistant-content';
   contentEl.innerHTML = renderMarkdown(fullText);
@@ -243,6 +256,44 @@ export function appendTextDelta(text) {
   }, STALE_STREAM_MS);
 }
 
+export function appendThinking(content, effort = '') {
+  removeThinkingIndicator();
+  const replyBlock = currentTextBlock;
+  finalizeTextBlock();
+
+  if (!currentAssistantGroup) {
+    startAssistantMessage();
+    removeThinkingIndicator();
+  }
+
+  currentThinkingText = content;
+  if (!currentThinkingBlock) {
+    currentThinkingBlock = createThinkingBlock(content, effort);
+    insertThinkingBlock(currentThinkingBlock, replyBlock);
+  } else {
+    updateThinkingBlock(currentThinkingBlock, currentThinkingText);
+  }
+  scrollToBottom();
+}
+
+export function appendThinkingDelta(content, effort = '') {
+  removeThinkingIndicator();
+
+  if (!currentAssistantGroup) {
+    startAssistantMessage();
+    removeThinkingIndicator();
+  }
+
+  currentThinkingText += content;
+  if (!currentThinkingBlock) {
+    currentThinkingBlock = createThinkingBlock(currentThinkingText, effort);
+    insertThinkingBlock(currentThinkingBlock, currentTextBlock);
+  } else {
+    updateThinkingBlock(currentThinkingBlock, currentThinkingText);
+  }
+  scrollToBottom();
+}
+
 function flushTextBuffer() {
   renderScheduled = false;
   if (currentTextBlock && textBuffer) {
@@ -269,6 +320,8 @@ export function finishAssistantMessage() {
   removeThinkingIndicator();
   state.activityText = null;
   currentAssistantGroup = null;
+  currentThinkingBlock = null;
+  currentThinkingText = '';
 }
 
 // ===== User message (live) =====
@@ -451,8 +504,46 @@ export function clearMessages() {
   messagesEl.appendChild(welcomeEl);
   currentAssistantGroup = null;
   currentTextBlock = null;
+  currentThinkingBlock = null;
+  currentThinkingText = '';
   textBuffer = '';
   thinkingEl = null;
+}
+
+function insertThinkingBlock(thinkingBlock, replyBlock = null) {
+  const firstReplyBlock = replyBlock?.parentNode === currentAssistantGroup
+    ? replyBlock
+    : currentAssistantGroup.querySelector('.assistant-content, .message-content');
+  if (firstReplyBlock) {
+    currentAssistantGroup.insertBefore(thinkingBlock, firstReplyBlock);
+  } else {
+    currentAssistantGroup.appendChild(thinkingBlock);
+  }
+}
+
+function updateThinkingBlock(block, content) {
+  const pre = block.querySelector('pre');
+  if (pre) pre.textContent = content;
+}
+
+function createThinkingBlock(content, effort = '') {
+  const block = document.createElement('div');
+  block.className = 'provider-thinking-block';
+  const label = effort ? `Thinking · ${effort}` : 'Thinking';
+  block.innerHTML = `
+    <button class="provider-thinking-header" type="button">
+      <span>${escapeHtml(label)}</span>
+      <span class="provider-thinking-toggle">&#9654;</span>
+    </button>
+    <div class="provider-thinking-body">
+      <pre>${escapeHtml(content)}</pre>
+    </div>
+  `;
+  block.querySelector('.provider-thinking-header').addEventListener('click', () => {
+    block.querySelector('.provider-thinking-body').classList.toggle('open');
+    block.querySelector('.provider-thinking-toggle').classList.toggle('open');
+  });
+  return block;
 }
 
 function scrollToBottom() {

@@ -1128,8 +1128,19 @@ async def agent_loop(
                 thinking_enabled=config.thinking_enabled,
                 thinking_effort=config.thinking_effort,
             ) as stream:
-                async for text in stream:
-                    await send_event({"type": "text_delta", "content": text})
+                thinking_streamed = False
+                async for delta in stream:
+                    if isinstance(delta, dict) and delta.get("type") == "thinking_delta":
+                        thinking_streamed = True
+                        await send_event({
+                            "type": "thinking_delta",
+                            "content": delta.get("content", ""),
+                            "effort": config.thinking_effort,
+                        })
+                    else:
+                        await send_event({
+                            "type": "text_delta", "content": str(delta),
+                        })
 
                 response = await stream.get_response()
         except Exception as e:
@@ -1143,7 +1154,7 @@ async def agent_loop(
         usage_tracker["output"] = total_output
 
         thinking_text = _extract_thinking_text(response.content)
-        if thinking_text:
+        if thinking_text and not thinking_streamed:
             await send_event({
                 "type": "thinking",
                 "content": thinking_text,
@@ -1378,13 +1389,22 @@ async def agent_loop(
                     thinking_enabled=config.thinking_enabled,
                     thinking_effort=config.thinking_effort,
                 ) as stream:
-                    async for text in stream:
-                        await send_event({
-                            "type": "text_delta", "content": text,
-                        })
+                    thinking_streamed = False
+                    async for delta in stream:
+                        if isinstance(delta, dict) and delta.get("type") == "thinking_delta":
+                            thinking_streamed = True
+                            await send_event({
+                                "type": "thinking_delta",
+                                "content": delta.get("content", ""),
+                                "effort": config.thinking_effort,
+                            })
+                        else:
+                            await send_event({
+                                "type": "text_delta", "content": str(delta),
+                            })
                     final_resp = await stream.get_response()
                 thinking_text = _extract_thinking_text(final_resp.content)
-                if thinking_text:
+                if thinking_text and not thinking_streamed:
                     await send_event({
                         "type": "thinking",
                         "content": thinking_text,

@@ -8,6 +8,8 @@ import {
   renderHistory,
   startAssistantMessage,
   appendTextDelta,
+  appendThinking,
+  appendThinkingDelta,
   showActivityForTool,
   showActivity,
   hideActivity,
@@ -229,7 +231,10 @@ async function createNewChat() {
   // Auto-create using first preset (no modal)
   try {
     const preset = _presets.length > 0 ? _presets[0].name : null;
-    const { conversation_id } = await api.createChat(null, preset);
+    const { conversation_id } = await api.createChat(null, preset, {
+      enableThinking: true,
+      thinkingEffort: 'max',
+    });
     await loadConversations();
     await selectConversation(conversation_id);
   } catch (err) {
@@ -348,6 +353,14 @@ function handleServerEvent(event) {
   switch (event.type) {
     case 'text_delta':
       appendTextDelta(event.content);
+      break;
+
+    case 'thinking':
+      appendThinking(event.content, event.effort);
+      break;
+
+    case 'thinking_delta':
+      appendThinkingDelta(event.content, event.effort);
       break;
 
     case 'tool_call':

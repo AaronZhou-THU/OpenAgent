@@ -31,10 +31,12 @@ export function deleteConversation(id) {
 }
 
 // Chat
-export function createChat(systemPrompt = null, preset = null) {
+export function createChat(systemPrompt = null, preset = null, { enableThinking = null, thinkingEffort = null } = {}) {
   const body = {};
   if (systemPrompt) body.system_prompt = systemPrompt;
   if (preset) body.preset = preset;
+  if (enableThinking !== null) body.enable_thinking = enableThinking;
+  if (thinkingEffort) body.thinking_effort = thinkingEffort;
   return request('/api/chat', {
     method: 'POST',
     body: JSON.stringify(body),

@@ -83,6 +83,10 @@ class _FakeStream:
 
     async def _iter_text(self):
         for block in self._response.content:
+            if isinstance(block, dict) and block.get("type") == "thinking":
+                thinking = block.get("thinking") or block.get("text") or ""
+                if thinking:
+                    yield {"type": "thinking_delta", "content": thinking}
             if isinstance(block, dict) and block.get("type") == "text":
                 yield block["text"]
 

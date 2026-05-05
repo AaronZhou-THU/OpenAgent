@@ -16,6 +16,8 @@ export const state = {
   pendingPlan: null,
   teamsActive: false,
   approvalActive: false,
+  thinkingActive: false,
+  thinkingEffort: 'high',
 };
 
 export function emit(event, data) {
@@ -42,4 +44,6 @@ export function resetConversationState() {
   state.pendingPlan = null;
   state.teamsActive = false;
   state.approvalActive = false;
+  state.thinkingActive = false;
+  state.thinkingEffort = 'high';
 }

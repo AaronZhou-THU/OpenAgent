@@ -59,9 +59,9 @@ class LLMResponse:
 
 
 class LLMStream(Protocol):
-    """Async-iterable of text deltas; call get_response() after iteration."""
+    """Async-iterable of stream deltas; call get_response() after iteration."""
 
-    def __aiter__(self) -> AsyncIterator[str]: ...
+    def __aiter__(self) -> AsyncIterator[str | dict[str, Any]]: ...
     async def get_response(self) -> LLMResponse: ...
 
 
@@ -172,8 +172,19 @@ class _AnthropicStream:
     def __init__(self, stream: Any) -> None:
         self._stream = stream
 
-    def __aiter__(self) -> AsyncIterator[str]:
-        return self._stream.text_stream.__aiter__()
+    async def _iter_events(self) -> AsyncIterator[str | dict[str, Any]]:
+        async for event in self._stream:
+            if getattr(event, "type", None) == "thinking":
+                thinking = getattr(event, "thinking", "")
+                if thinking:
+                    yield {"type": "thinking_delta", "content": thinking}
+            elif getattr(event, "type", None) == "text":
+                text = getattr(event, "text", "")
+                if text:
+                    yield text
+
+    def __aiter__(self) -> AsyncIterator[str | dict[str, Any]]:
+        return self._iter_events()
 
     async def get_response(self) -> LLMResponse:
         message = await self._stream.get_final_message()
@@ -449,7 +460,7 @@ class _OpenAIStream:
         self._usage: Any = None
         self._finish_reason: str = ""
 
-    async def _iter_text(self) -> AsyncIterator[str]:
+    async def _iter_text(self) -> AsyncIterator[str | dict[str, Any]]:
         async for chunk in self._stream:
             if getattr(chunk, "usage", None) is not None:
                 self._usage = chunk.usage
@@ -465,12 +476,16 @@ class _OpenAIStream:
             if delta is None:
                 continue
 
+            if getattr(delta, "reasoning_content", None):
+                self._thinking_parts.append(delta.reasoning_content)
+                yield {
+                    "type": "thinking_delta",
+                    "content": delta.reasoning_content,
+                }
+
             if getattr(delta, "content", None):
                 self._text_parts.append(delta.content)
                 yield delta.content
-
-            if getattr(delta, "reasoning_content", None):
-                self._thinking_parts.append(delta.reasoning_content)
 
             for tool_call in getattr(delta, "tool_calls", None) or []:
                 current = self._tool_calls.setdefault(
@@ -485,7 +500,7 @@ class _OpenAIStream:
                     if getattr(tool_call.function, "arguments", None):
                         current["arguments"].append(tool_call.function.arguments)
 
-    def __aiter__(self) -> AsyncIterator[str]:
+    def __aiter__(self) -> AsyncIterator[str | dict[str, Any]]:
         return self._iter_text()
 
     async def get_response(self) -> LLMResponse:

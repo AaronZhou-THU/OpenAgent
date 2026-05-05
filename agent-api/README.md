@@ -246,7 +246,8 @@ Connect to `ws://host/api/chat/{conversation_id}/ws`
 | Event | Fields | Description |
 |-------|--------|-------------|
 | `text_delta` | `content` | Streamed text from the model |
-| `thinking` | `content`, `effort` | Provider thinking output for the current assistant turn |
+| `thinking_delta` | `content`, `effort` | Streamed provider thinking output for the current assistant turn |
+| `thinking` | `content`, `effort` | Final provider thinking output when a provider only exposes it after streaming |
 | `tool_call` | `tool`, `input` | Model is calling a tool |
 | `tool_result` | `tool`, `result` | Tool execution result |
 | `tool_approval_request` | `tools: [{name, input, id}]` | Waiting for user approval (when approval enabled) |
@@ -334,7 +335,7 @@ Teams, tracing, tool approval, plan mode, and provider thinking are configurable
 
 ### Provider Thinking Output
 
-DeepSeek V4 and compatible providers can return provider-level thinking output in addition to normal assistant text. OpenAgent passes `thinking` / `output_config.effort` for Anthropic-compatible providers and `extra_body.thinking` / `reasoning_effort` for OpenAI-compatible providers. Returned thinking is stored in assistant message content as `{"type": "thinking", "thinking": "..."}`, emitted over WebSocket as a `thinking` event, and rendered in the developer UI as a collapsed "Thinking" block. `THINKING_ENABLED` and `THINKING_EFFORT` set the defaults for new conversations; `enable_thinking` and `thinking_effort` override them per conversation.
+DeepSeek V4 and compatible providers can return provider-level thinking output in addition to normal assistant text. OpenAgent passes `thinking` / `output_config.effort` for Anthropic-compatible providers and `extra_body.thinking` / `reasoning_effort` for OpenAI-compatible providers. Returned thinking is stored in assistant message content as `{"type": "thinking", "thinking": "..."}`, emitted over WebSocket as streaming `thinking_delta` events when available (or a final `thinking` event when the provider only exposes it after streaming), and rendered in all web UIs as a collapsed thinking block before the reply. `THINKING_ENABLED` and `THINKING_EFFORT` set the defaults for new conversations; `enable_thinking` and `thinking_effort` override them per conversation.
 
 ### Tool Approval
 

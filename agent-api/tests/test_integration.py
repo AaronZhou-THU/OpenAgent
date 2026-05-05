@@ -93,7 +93,7 @@ class ScriptedLLMClient:
 
 
 class _FakeStream:
-    """Minimal stream that yields text blocks then provides the full response."""
+    """Minimal stream that yields thinking/text blocks then returns response."""
 
     def __init__(self, response: LLMResponse) -> None:
         self._response = response
@@ -103,6 +103,10 @@ class _FakeStream:
 
     async def _iter_text(self):
         for block in self._response.content:
+            if isinstance(block, dict) and block.get("type") == "thinking":
+                thinking = block.get("thinking") or block.get("text") or ""
+                if thinking:
+                    yield {"type": "thinking_delta", "content": thinking}
             if isinstance(block, dict) and block.get("type") == "text":
                 yield block["text"]
 
@@ -231,7 +235,7 @@ class TestSimpleQA:
         # Only one LLM call
         assert len(llm.calls) == 1
 
-    async def test_thinking_event_emitted(self, tmp_path):
+    async def test_thinking_delta_streams_before_text(self, tmp_path):
         ws = tmp_path / "workspace"
         ws.mkdir()
         config = _make_settings(ws, thinking_enabled=True, thinking_effort="max")
@@ -260,10 +264,12 @@ class TestSimpleQA:
             send_event=events,
         )
 
-        thinking_events = events.of_type("thinking")
+        thinking_events = events.of_type("thinking_delta")
         assert len(thinking_events) == 1
         assert thinking_events[0]["content"] == "I should answer directly."
         assert thinking_events[0]["effort"] == "max"
+        assert events.types().index("thinking_delta") < events.types().index("text_delta")
+        assert events.of_type("thinking") == []
         assert llm.calls[0]["thinking_enabled"] is True
         assert llm.calls[0]["thinking_effort"] == "max"
         assert messages[-1]["content"][0]["type"] == "thinking"

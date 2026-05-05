@@ -10,6 +10,8 @@ import {
   renderToolResultHistory,
   startAssistantMessage,
   appendTextDelta,
+  appendThinking,
+  appendThinkingDelta,
   appendToolCall,
   appendToolResult,
   appendSubagentStart,
@@ -227,12 +229,16 @@ function showPresetSelector() {
   const tracingToggle = document.getElementById('enable-tracing-toggle');
   const approvalToggle = document.getElementById('enable-approval-toggle');
   const planModeToggle = document.getElementById('enable-plan-mode-toggle');
+  const thinkingToggle = document.getElementById('enable-thinking-toggle');
+  const thinkingEffortSelect = document.getElementById('thinking-effort-select');
   const createBtn = document.getElementById('preset-create-btn');
   list.innerHTML = '';
   teamsToggle.checked = false;
   tracingToggle.checked = false;
   approvalToggle.checked = false;
   planModeToggle.checked = false;
+  thinkingToggle.checked = true;
+  thinkingEffortSelect.value = 'max';
 
   // Default to first preset
   _selectedPreset = _presets.length > 0 ? _presets[0].name : null;
@@ -262,6 +268,8 @@ function showPresetSelector() {
       enableTracing: tracingToggle.checked,
       enableApproval: approvalToggle.checked,
       enablePlanMode: planModeToggle.checked,
+      enableThinking: thinkingToggle.checked,
+      thinkingEffort: thinkingEffortSelect.value,
     });
   };
   createBtn.addEventListener('click', handler);
@@ -277,9 +285,9 @@ function showPresetSelector() {
   }, { once: true });
 }
 
-async function doCreateChat(preset = null, { enableTeams = false, enableTracing = false, enableApproval = false, enablePlanMode = false } = {}) {
+async function doCreateChat(preset = null, { enableTeams = false, enableTracing = false, enableApproval = false, enablePlanMode = false, enableThinking = true, thinkingEffort = 'max' } = {}) {
   try {
-    const { conversation_id } = await api.createChat(null, preset, { enableTeams, enableTracing, enableApproval, enablePlanMode });
+    const { conversation_id } = await api.createChat(null, preset, { enableTeams, enableTracing, enableApproval, enablePlanMode, enableThinking, thinkingEffort });
     await loadConversations();
     await selectConversation(conversation_id);
   } catch (err) {
@@ -304,6 +312,8 @@ async function selectConversation(id) {
     state.planModeActive = conv.enable_plan_mode || false;
     state.teamsActive = conv.enable_teams || false;
     state.approvalActive = conv.enable_approval || false;
+    state.thinkingActive = conv.enable_thinking || false;
+    state.thinkingEffort = conv.thinking_effort || 'high';
     renderHistoryWithToolResults(conv);
     updatePlanModeUI();
     updateTeamsUI();
@@ -381,7 +391,12 @@ function renderAssistantFromHistory(content) {
   const blocks = Array.isArray(content) ? content : [{ type: 'text', text: String(content) }];
 
   for (const block of blocks) {
-    if (block.type === 'text' && block.text?.trim()) {
+    if (block.type === 'thinking') {
+      const thinking = block.thinking || block.text || '';
+      if (thinking.trim()) {
+        appendHistoryThinkingBlock(group, thinking);
+      }
+    } else if (block.type === 'text' && block.text?.trim()) {
       const textEl = document.createElement('div');
       textEl.className = 'message-content';
       textEl.innerHTML = renderMarkdown(block.text);
@@ -393,6 +408,25 @@ function renderAssistantFromHistory(content) {
   }
 
   messagesEl.appendChild(group);
+}
+
+function appendHistoryThinkingBlock(group, content) {
+  const block = document.createElement('div');
+  block.className = 'thinking-block';
+  block.innerHTML = `
+    <div class="thinking-header">
+      <span>思考</span>
+      <span class="thinking-toggle">&#9654;</span>
+    </div>
+    <div class="thinking-body">
+      <pre>${escapeHtml(content)}</pre>
+    </div>
+  `;
+  block.querySelector('.thinking-header').addEventListener('click', () => {
+    block.querySelector('.thinking-body').classList.toggle('open');
+    block.querySelector('.thinking-toggle').classList.toggle('open');
+  });
+  group.appendChild(block);
 }
 
 function createHistoryToolBlock(name, content, type, toolUseId) {
@@ -525,6 +559,14 @@ function handleServerEvent(event) {
   switch (event.type) {
     case 'text_delta':
       appendTextDelta(event.content);
+      break;
+
+    case 'thinking':
+      appendThinking(event.content, event.effort);
+      break;
+
+    case 'thinking_delta':
+      appendThinkingDelta(event.content, event.effort);
       break;
 
     case 'tool_call':

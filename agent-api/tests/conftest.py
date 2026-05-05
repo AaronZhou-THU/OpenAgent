@@ -102,11 +102,15 @@ class MockLLMClient:
         )
         yield self  # not used in tests that only need create()
 
-    def __aiter__(self) -> AsyncIterator[str]:
+    def __aiter__(self) -> AsyncIterator[str | dict[str, Any]]:
         return self._stream_text()
 
-    async def _stream_text(self) -> AsyncIterator[str]:
+    async def _stream_text(self) -> AsyncIterator[str | dict[str, Any]]:
         for block in self.response.content:
+            if block.get("type") == "thinking":
+                thinking = block.get("thinking") or block.get("text") or ""
+                if thinking:
+                    yield {"type": "thinking_delta", "content": thinking}
             if block.get("type") == "text":
                 yield block["text"]
 

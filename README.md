@@ -568,6 +568,8 @@ THINKING_EFFORT=max
 # Implement or extend the adapter layer in agent-api/src/agent_service/agent/llm.py
 ```
 
+When provider thinking is enabled, the web UIs render a collapsed thinking block before the assistant reply while the reply text continues streaming normally.
+
 ## Documentation
 
 | Document | Audience | Description |

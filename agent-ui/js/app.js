@@ -11,6 +11,7 @@ import {
   startAssistantMessage,
   appendTextDelta,
   appendThinking,
+  appendThinkingDelta,
   appendToolCall,
   appendToolResult,
   appendSubagentStart,
@@ -562,6 +563,10 @@ function handleServerEvent(event) {
 
     case 'thinking':
       appendThinking(event.content, event.effort);
+      break;
+
+    case 'thinking_delta':
+      appendThinkingDelta(event.content, event.effort);
       break;
 
     case 'tool_call':

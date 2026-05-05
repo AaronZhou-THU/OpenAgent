@@ -132,6 +132,18 @@
             <span class="toggle-label">规划模式</span>
             <span class="toggle-desc">只读探索和规划后再执行操作</span>
           </label>
+          <label class="toggle-option" title="启用模型思考输出并在对话中显示">
+            <input type="checkbox" id="enable-thinking-toggle" checked>
+            <span class="toggle-label">思考</span>
+            <span class="toggle-desc">显示模型思考输出</span>
+          </label>
+          <label class="select-option" title="选择本次对话的 DeepSeek 思考强度">
+            <span class="toggle-label">思考强度</span>
+            <select id="thinking-effort-select">
+              <option value="high">高</option>
+              <option value="max" selected>最高</option>
+            </select>
+          </label>
         </div>
         <button id="preset-create-btn" class="preset-create-btn">创建</button>
       </div>

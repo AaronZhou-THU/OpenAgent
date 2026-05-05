@@ -7,6 +7,8 @@ const welcomeEl = document.getElementById('welcome');
 // Track current streaming state
 let currentAssistantGroup = null;
 let currentTextBlock = null;
+let currentThinkingBlock = null;
+let currentThinkingText = '';
 let textBuffer = '';
 let renderScheduled = false;
 
@@ -103,7 +105,10 @@ function renderAssistantHistory(content) {
   // We'll just render what we have in the assistant content
 
   for (const block of blocks) {
-    if (block.type === 'text' && block.text?.trim()) {
+    if (block.type === 'thinking') {
+      const thinking = block.thinking || block.text || '';
+      if (thinking.trim()) group.appendChild(createThinkingBlock(thinking));
+    } else if (block.type === 'text' && block.text?.trim()) {
       const textEl = document.createElement('div');
       textEl.className = 'message-content';
       textEl.innerHTML = renderMarkdown(block.text);
@@ -173,6 +178,39 @@ export function appendTextDelta(text) {
     renderScheduled = true;
     requestAnimationFrame(flushTextBuffer);
   }
+}
+
+export function appendThinking(content, effort = '') {
+  const replyBlock = currentTextBlock;
+  finalizeTextBlock();
+
+  if (!currentAssistantGroup) {
+    startAssistantMessage();
+  }
+
+  currentThinkingText = content;
+  if (!currentThinkingBlock) {
+    currentThinkingBlock = createThinkingBlock(content, effort);
+    insertThinkingBlock(currentThinkingBlock, replyBlock);
+  } else {
+    updateThinkingBlock(currentThinkingBlock, currentThinkingText);
+  }
+  scrollToBottom();
+}
+
+export function appendThinkingDelta(content, effort = '') {
+  if (!currentAssistantGroup) {
+    startAssistantMessage();
+  }
+
+  currentThinkingText += content;
+  if (!currentThinkingBlock) {
+    currentThinkingBlock = createThinkingBlock(currentThinkingText, effort);
+    insertThinkingBlock(currentThinkingBlock, currentTextBlock);
+  } else {
+    updateThinkingBlock(currentThinkingBlock, currentThinkingText);
+  }
+  scrollToBottom();
 }
 
 function flushTextBuffer() {
@@ -348,6 +386,8 @@ export function appendCompactNotice(message) {
 export function finishAssistantMessage() {
   finalizeTextBlock();
   currentAssistantGroup = null;
+  currentThinkingBlock = null;
+  currentThinkingText = '';
 }
 
 export function renderInterruptNotice() {
@@ -467,6 +507,27 @@ function createToolBlock(name, content, type) {
   return block;
 }
 
+function createThinkingBlock(content, effort = '') {
+  const block = document.createElement('div');
+  block.className = 'thinking-block';
+  const effortLabels = { high: '高', max: '最高' };
+  const label = effort ? `思考 · ${effortLabels[effort] || effort}` : '思考';
+  block.innerHTML = `
+    <div class="thinking-header">
+      <span>${escapeHtml(label)}</span>
+      <span class="thinking-toggle">&#9654;</span>
+    </div>
+    <div class="thinking-body">
+      <pre>${escapeHtml(content)}</pre>
+    </div>
+  `;
+  block.querySelector('.thinking-header').addEventListener('click', () => {
+    block.querySelector('.thinking-body').classList.toggle('open');
+    block.querySelector('.thinking-toggle').classList.toggle('open');
+  });
+  return block;
+}
+
 function formatToolContent(content) {
   if (typeof content === 'string') return content;
   try {
@@ -481,7 +542,25 @@ export function clearMessages() {
   messagesEl.appendChild(welcomeEl);
   currentAssistantGroup = null;
   currentTextBlock = null;
+  currentThinkingBlock = null;
+  currentThinkingText = '';
   textBuffer = '';
+}
+
+function insertThinkingBlock(thinkingBlock, replyBlock = null) {
+  const firstReplyBlock = replyBlock?.parentNode === currentAssistantGroup
+    ? replyBlock
+    : currentAssistantGroup.querySelector('.message-content, .assistant-content');
+  if (firstReplyBlock) {
+    currentAssistantGroup.insertBefore(thinkingBlock, firstReplyBlock);
+  } else {
+    currentAssistantGroup.appendChild(thinkingBlock);
+  }
+}
+
+function updateThinkingBlock(block, content) {
+  const pre = block.querySelector('pre');
+  if (pre) pre.textContent = content;
 }
 
 function scrollToBottom() {
