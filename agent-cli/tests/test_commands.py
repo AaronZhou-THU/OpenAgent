@@ -150,6 +150,8 @@ class TestResumeCommand:
             session_id="x",
             model="m",
             preset="coding",
+            thinking_enabled=False,
+            thinking_effort="high",
         )
         with patch("agent_cli.commands.console"):
             result = await dispatch("/resume", empty_ctx)
