@@ -132,6 +132,18 @@
             <span class="toggle-label">Plan Mode</span>
             <span class="toggle-desc">Read-only exploration and planning before execution</span>
           </label>
+          <label class="toggle-option" title="Enable provider thinking output and show it in the conversation">
+            <input type="checkbox" id="enable-thinking-toggle" checked>
+            <span class="toggle-label">Thinking</span>
+            <span class="toggle-desc">Show model thinking output</span>
+          </label>
+          <label class="select-option" title="Choose DeepSeek thinking effort for this conversation">
+            <span class="toggle-label">Thinking Level</span>
+            <select id="thinking-effort-select">
+              <option value="high">High</option>
+              <option value="max" selected>Max</option>
+            </select>
+          </label>
         </div>
         <button id="preset-create-btn" class="preset-create-btn">Create</button>
       </div>

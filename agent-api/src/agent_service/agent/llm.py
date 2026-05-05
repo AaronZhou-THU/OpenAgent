@@ -84,6 +84,8 @@ class LLMClient(Protocol):
         tools: list[dict],
         max_tokens: int,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ) -> LLMResponse: ...
 
     def stream(
@@ -95,7 +97,29 @@ class LLMClient(Protocol):
         tools: list[dict],
         max_tokens: int,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ) -> contextlib.AbstractAsyncContextManager[LLMStream]: ...
+
+
+def _normalize_thinking_effort(value: str | None) -> str:
+    value = (value or "high").strip().lower()
+    return "max" if value in {"max", "xhigh"} else "high"
+
+
+def _add_anthropic_thinking(
+    kwargs: dict[str, Any],
+    *,
+    thinking_enabled: bool | None,
+    thinking_effort: str | None,
+) -> None:
+    if thinking_enabled is None:
+        return
+    kwargs["thinking"] = {"type": "enabled" if thinking_enabled else "disabled"}
+    if thinking_enabled:
+        kwargs["output_config"] = {
+            "effort": _normalize_thinking_effort(thinking_effort),
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -172,6 +196,8 @@ class AnthropicAdapter:
         tools: list[dict] | None = None,
         max_tokens: int = 8192,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ) -> LLMResponse:
         kwargs: dict[str, Any] = {
             "model": model,
@@ -179,6 +205,11 @@ class AnthropicAdapter:
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
+        _add_anthropic_thinking(
+            kwargs,
+            thinking_enabled=thinking_enabled,
+            thinking_effort=thinking_effort,
+        )
         if system:
             kwargs["system"] = system
         if tools:
@@ -202,6 +233,8 @@ class AnthropicAdapter:
         tools: list[dict] | None = None,
         max_tokens: int = 8192,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ):
         kwargs: dict[str, Any] = {
             "model": model,
@@ -209,6 +242,11 @@ class AnthropicAdapter:
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
+        _add_anthropic_thinking(
+            kwargs,
+            thinking_enabled=thinking_enabled,
+            thinking_effort=thinking_effort,
+        )
         if system:
             kwargs["system"] = system
         if tools:
@@ -265,6 +303,21 @@ def _openai_tools_from_internal(tools: list[dict] | None) -> list[dict]:
     return converted
 
 
+def _add_openai_thinking(
+    kwargs: dict[str, Any],
+    *,
+    thinking_enabled: bool | None,
+    thinking_effort: str | None,
+) -> None:
+    if thinking_enabled is None:
+        return
+    kwargs["extra_body"] = {
+        "thinking": {"type": "enabled" if thinking_enabled else "disabled"},
+    }
+    if thinking_enabled:
+        kwargs["reasoning_effort"] = _normalize_thinking_effort(thinking_effort)
+
+
 def _openai_messages_from_internal(
     *,
     system: str,
@@ -285,6 +338,7 @@ def _openai_messages_from_internal(
 
         if role == "assistant" and isinstance(content, list):
             text_parts: list[str] = []
+            reasoning_parts: list[str] = []
             tool_calls: list[dict[str, Any]] = []
             for block in content:
                 if not isinstance(block, dict):
@@ -293,6 +347,8 @@ def _openai_messages_from_internal(
                 btype = block.get("type")
                 if btype == "text":
                     text_parts.append(block.get("text", ""))
+                elif btype == "thinking":
+                    reasoning_parts.append(block.get("thinking") or block.get("text") or "")
                 elif btype == "tool_use":
                     tool_calls.append({
                         "id": block["id"],
@@ -302,11 +358,15 @@ def _openai_messages_from_internal(
                             "arguments": json.dumps(block.get("input", {})),
                         },
                     })
-            converted.append({
+            converted_msg = {
                 "role": "assistant",
                 "content": "".join(text_parts) or None,
                 **({"tool_calls": tool_calls} if tool_calls else {}),
-            })
+            }
+            reasoning_content = "".join(reasoning_parts)
+            if reasoning_content:
+                converted_msg["reasoning_content"] = reasoning_content
+            converted.append(converted_msg)
             continue
 
         if role == "user" and isinstance(content, list):
@@ -342,6 +402,10 @@ def _openai_to_response(raw: Any) -> LLMResponse:
 
     content: list[dict[str, Any]] = []
     tool_calls: list[ToolCall] = []
+
+    reasoning_content = getattr(message, "reasoning_content", None)
+    if reasoning_content:
+        content.append({"type": "thinking", "thinking": reasoning_content})
 
     if getattr(message, "content", None):
         content.append({"type": "text", "text": message.content})
@@ -379,6 +443,7 @@ class _OpenAIStream:
 
     def __init__(self, stream: Any) -> None:
         self._stream = stream
+        self._thinking_parts: list[str] = []
         self._text_parts: list[str] = []
         self._tool_calls: dict[int, dict[str, Any]] = {}
         self._usage: Any = None
@@ -404,6 +469,9 @@ class _OpenAIStream:
                 self._text_parts.append(delta.content)
                 yield delta.content
 
+            if getattr(delta, "reasoning_content", None):
+                self._thinking_parts.append(delta.reasoning_content)
+
             for tool_call in getattr(delta, "tool_calls", None) or []:
                 current = self._tool_calls.setdefault(
                     tool_call.index,
@@ -425,6 +493,9 @@ class _OpenAIStream:
         tool_calls: list[ToolCall] = []
 
         text = "".join(self._text_parts)
+        thinking = "".join(self._thinking_parts)
+        if thinking:
+            content.append({"type": "thinking", "thinking": thinking})
         if text:
             content.append({"type": "text", "text": text})
 
@@ -471,6 +542,8 @@ class OpenAIAdapter:
         tools: list[dict] | None = None,
         max_tokens: int = 8192,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ) -> LLMResponse:
         kwargs: dict[str, Any] = {
             "model": model,
@@ -478,6 +551,11 @@ class OpenAIAdapter:
             "max_completion_tokens": max_tokens,
             "temperature": temperature,
         }
+        _add_openai_thinking(
+            kwargs,
+            thinking_enabled=thinking_enabled,
+            thinking_effort=thinking_effort,
+        )
         openai_tools = _openai_tools_from_internal(tools)
         if openai_tools:
             kwargs["tools"] = openai_tools
@@ -495,6 +573,8 @@ class OpenAIAdapter:
         tools: list[dict] | None = None,
         max_tokens: int = 8192,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ):
         kwargs: dict[str, Any] = {
             "model": model,
@@ -504,6 +584,11 @@ class OpenAIAdapter:
             "stream": True,
             "stream_options": {"include_usage": True},
         }
+        _add_openai_thinking(
+            kwargs,
+            thinking_enabled=thinking_enabled,
+            thinking_effort=thinking_effort,
+        )
         openai_tools = _openai_tools_from_internal(tools)
         if openai_tools:
             kwargs["tools"] = openai_tools
@@ -616,7 +701,19 @@ class TracingLLMClient:
         self._emit = emit_event
         self._call_seq = 0  # monotonic counter for pairing request/response
 
-    async def _emit_request(self, seq: int, *, model, system, messages, tools, max_tokens, temperature):
+    async def _emit_request(
+        self,
+        seq: int,
+        *,
+        model,
+        system,
+        messages,
+        tools,
+        max_tokens,
+        temperature,
+        thinking_enabled=None,
+        thinking_effort=None,
+    ):
         await self._emit(_redact_sensitive({
             "type": "llm_request",
             "seq": seq,
@@ -626,6 +723,8 @@ class TracingLLMClient:
             "tools": tools,
             "max_tokens": max_tokens,
             "temperature": temperature,
+            "thinking_enabled": thinking_enabled,
+            "thinking_effort": thinking_effort,
             "message_count": len(messages),
             "tool_count": len(tools) if tools else 0,
         }))
@@ -655,15 +754,20 @@ class TracingLLMClient:
         tools: list[dict],
         max_tokens: int,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ) -> LLMResponse:
         self._call_seq += 1
         seq = self._call_seq
         await self._emit_request(seq, model=model, system=system,
                                   messages=messages, tools=tools,
-                                  max_tokens=max_tokens, temperature=temperature)
+                                  max_tokens=max_tokens, temperature=temperature,
+                                  thinking_enabled=thinking_enabled,
+                                  thinking_effort=thinking_effort)
         resp = await self._inner.create(
             model=model, system=system, messages=messages,
             tools=tools, max_tokens=max_tokens, temperature=temperature,
+            thinking_enabled=thinking_enabled, thinking_effort=thinking_effort,
         )
         await self._emit_response(seq, resp)
         return resp
@@ -678,12 +782,16 @@ class TracingLLMClient:
         tools: list[dict],
         max_tokens: int,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ):
         self._call_seq += 1
         seq = self._call_seq
         await self._emit_request(seq, model=model, system=system,
                                   messages=messages, tools=tools,
-                                  max_tokens=max_tokens, temperature=temperature)
+                                  max_tokens=max_tokens, temperature=temperature,
+                                  thinking_enabled=thinking_enabled,
+                                  thinking_effort=thinking_effort)
 
         async def _on_response(resp):
             await self._emit_response(seq, resp)
@@ -691,6 +799,7 @@ class TracingLLMClient:
         async with self._inner.stream(
             model=model, system=system, messages=messages,
             tools=tools, max_tokens=max_tokens, temperature=temperature,
+            thinking_enabled=thinking_enabled, thinking_effort=thinking_effort,
         ) as inner_stream:
             yield _TracingStream(inner_stream, _on_response)
 
@@ -748,6 +857,8 @@ class RetryingLLMClient:
         tools: list[dict],
         max_tokens: int,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ) -> LLMResponse:
         last_exc: Exception | None = None
         for attempt in range(self._max_retries + 1):
@@ -755,6 +866,7 @@ class RetryingLLMClient:
                 return await self._inner.create(
                     model=model, system=system, messages=messages,
                     tools=tools, max_tokens=max_tokens, temperature=temperature,
+                    thinking_enabled=thinking_enabled, thinking_effort=thinking_effort,
                 )
             except Exception as e:
                 last_exc = e
@@ -773,6 +885,8 @@ class RetryingLLMClient:
         tools: list[dict],
         max_tokens: int,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ):
         """Retry only the initial connection (``__aenter__``), not mid-stream."""
         last_exc: Exception | None = None
@@ -781,6 +895,7 @@ class RetryingLLMClient:
                 cm = self._inner.stream(
                     model=model, system=system, messages=messages,
                     tools=tools, max_tokens=max_tokens, temperature=temperature,
+                    thinking_enabled=thinking_enabled, thinking_effort=thinking_effort,
                 )
                 stream_obj = await cm.__aenter__()
                 try:

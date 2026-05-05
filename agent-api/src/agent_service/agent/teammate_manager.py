@@ -281,6 +281,8 @@ class TeammateManager:
                             tools=tool_defs,
                             max_tokens=self.config.max_output_tokens,
                             temperature=self.config.teammate_temperature,
+                            thinking_enabled=self.config.thinking_enabled,
+                            thinking_effort=self.config.thinking_effort,
                         )
                     except Exception:
                         logger.exception("Teammate '%s' LLM call failed", name)

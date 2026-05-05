@@ -46,6 +46,8 @@ async def init_db(database_url: str) -> None:
         await _migrate_add_column(conn, "conversations", "enable_tracing", "BOOLEAN DEFAULT 0")
         await _migrate_add_column(conn, "conversations", "enable_approval", "BOOLEAN DEFAULT 0")
         await _migrate_add_column(conn, "conversations", "enable_plan_mode", "BOOLEAN DEFAULT 0")
+        await _migrate_add_column(conn, "conversations", "enable_thinking", "BOOLEAN DEFAULT 0")
+        await _migrate_add_column(conn, "conversations", "thinking_effort", "TEXT DEFAULT 'high'")
 
 
 async def get_session() -> AsyncSession:

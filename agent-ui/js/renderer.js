@@ -103,7 +103,10 @@ function renderAssistantHistory(content) {
   // We'll just render what we have in the assistant content
 
   for (const block of blocks) {
-    if (block.type === 'text' && block.text?.trim()) {
+    if (block.type === 'thinking') {
+      const thinking = block.thinking || block.text || '';
+      if (thinking.trim()) group.appendChild(createThinkingBlock(thinking));
+    } else if (block.type === 'text' && block.text?.trim()) {
       const textEl = document.createElement('div');
       textEl.className = 'message-content';
       textEl.innerHTML = renderMarkdown(block.text);
@@ -173,6 +176,17 @@ export function appendTextDelta(text) {
     renderScheduled = true;
     requestAnimationFrame(flushTextBuffer);
   }
+}
+
+export function appendThinking(content, effort = '') {
+  finalizeTextBlock();
+
+  if (!currentAssistantGroup) {
+    startAssistantMessage();
+  }
+
+  currentAssistantGroup.appendChild(createThinkingBlock(content, effort));
+  scrollToBottom();
 }
 
 function flushTextBuffer() {
@@ -463,6 +477,26 @@ function createToolBlock(name, content, type) {
     toggle.classList.toggle('open');
   });
 
+  return block;
+}
+
+function createThinkingBlock(content, effort = '') {
+  const block = document.createElement('div');
+  block.className = 'thinking-block';
+  const label = effort ? `Thinking · ${effort}` : 'Thinking';
+  block.innerHTML = `
+    <div class="thinking-header">
+      <span>${escapeHtml(label)}</span>
+      <span class="thinking-toggle">&#9654;</span>
+    </div>
+    <div class="thinking-body">
+      <pre>${escapeHtml(content)}</pre>
+    </div>
+  `;
+  block.querySelector('.thinking-header').addEventListener('click', () => {
+    block.querySelector('.thinking-body').classList.toggle('open');
+    block.querySelector('.thinking-toggle').classList.toggle('open');
+  });
   return block;
 }
 

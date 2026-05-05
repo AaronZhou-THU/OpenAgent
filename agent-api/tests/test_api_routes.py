@@ -95,6 +95,8 @@ async def test_create_chat_with_options(client: AsyncClient):
             "enable_teams": True,
             "enable_tracing": True,
             "enable_approval": True,
+            "enable_thinking": True,
+            "thinking_effort": "max",
         },
     )
     assert resp.status_code == 200
@@ -108,6 +110,8 @@ async def test_create_chat_with_options(client: AsyncClient):
     assert detail["enable_teams"] is True
     assert detail["enable_tracing"] is True
     assert detail["enable_approval"] is True
+    assert detail["enable_thinking"] is True
+    assert detail["thinking_effort"] == "max"
 
 
 async def test_list_conversations(client: AsyncClient):

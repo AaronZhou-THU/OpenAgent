@@ -47,7 +47,7 @@ export function deleteConversation(id) {
 }
 
 // Chat
-export function createChat(systemPrompt = null, preset = null, { enableTeams = false, enableTracing = false, enableApproval = false, enablePlanMode = false } = {}) {
+export function createChat(systemPrompt = null, preset = null, { enableTeams = false, enableTracing = false, enableApproval = false, enablePlanMode = false, enableThinking = null, thinkingEffort = null } = {}) {
   const body = {};
   if (systemPrompt) body.system_prompt = systemPrompt;
   if (preset) body.preset = preset;
@@ -55,6 +55,8 @@ export function createChat(systemPrompt = null, preset = null, { enableTeams = f
   if (enableTracing) body.enable_tracing = true;
   if (enableApproval) body.enable_approval = true;
   if (enablePlanMode) body.enable_plan_mode = true;
+  if (enableThinking !== null) body.enable_thinking = enableThinking;
+  if (thinkingEffort) body.thinking_effort = thinkingEffort;
   return request('/api/chat', {
     method: 'POST',
     body: JSON.stringify(body),

@@ -225,6 +225,13 @@ async def chat_ws(ws: WebSocket, conv_id: str, token: str | None = Query(None)):
         enable_tracing = conv.enable_tracing
         enable_approval = conv.enable_approval
         enable_plan_mode = conv.enable_plan_mode
+        enable_thinking = conv.enable_thinking
+        thinking_effort = conv.thinking_effort or _settings.thinking_effort
+
+    run_settings = _settings.model_copy(update={
+        "thinking_enabled": enable_thinking,
+        "thinking_effort": thinking_effort,
+    })
 
     # Per-conversation todo manager + lock (shared across connections)
     if conv_id not in _todo_managers:
@@ -276,7 +283,7 @@ async def chat_ws(ws: WebSocket, conv_id: str, token: str | None = Query(None)):
             workspace=workspace,
             bus=message_bus,
             llm=session_llm,
-            config=_settings,
+            config=run_settings,
             send_event=send_event,
             task_manager=task_manager,
         )
@@ -322,7 +329,7 @@ async def chat_ws(ws: WebSocket, conv_id: str, token: str | None = Query(None)):
                             workspace=workspace,
                             bus=message_bus,
                             llm=session_llm,
-                            config=_settings,
+                            config=run_settings,
                             send_event=send_event,
                             task_manager=task_manager,
                         )
@@ -427,7 +434,7 @@ async def chat_ws(ws: WebSocket, conv_id: str, token: str | None = Query(None)):
                 try:
                     usage = await agent_loop(
                         messages=messages,
-                        config=_settings,
+                        config=run_settings,
                         llm=session_llm,
                         skill_loader=_skill_loader,
                         todo=todo,
@@ -464,7 +471,7 @@ async def chat_ws(ws: WebSocket, conv_id: str, token: str | None = Query(None)):
                 # Persist new messages and usage
                 async with db.async_session_factory() as session:
                     await _save_messages(conv_id, messages, start_idx, session)
-                    await _save_usage(conv_id, usage, _settings.model, session)
+                    await _save_usage(conv_id, usage, run_settings.model, session)
 
                     # Auto-title: use first user message if no title yet
                     conv = await session.get(Conversation, conv_id)

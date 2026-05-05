@@ -21,6 +21,8 @@ class Conversation(Base):
     enable_tracing: Mapped[bool] = mapped_column(Boolean, default=False)
     enable_approval: Mapped[bool] = mapped_column(Boolean, default=False)
     enable_plan_mode: Mapped[bool] = mapped_column(Boolean, default=False)
+    enable_thinking: Mapped[bool] = mapped_column(Boolean, default=False)
+    thinking_effort: Mapped[str] = mapped_column(String, default="high")
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, server_default=func.now()
     )

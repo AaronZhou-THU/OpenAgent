@@ -54,17 +54,23 @@ class ScriptedLLMClient:
         )
 
     async def create(self, *, model, system, messages, tools,
-                     max_tokens, temperature=1.0) -> LLMResponse:
+                     max_tokens, temperature=1.0,
+                     thinking_enabled=None, thinking_effort=None) -> LLMResponse:
         return self._next(model=model, system=system, messages=messages,
                           tools=tools, max_tokens=max_tokens,
-                          temperature=temperature)
+                          temperature=temperature,
+                          thinking_enabled=thinking_enabled,
+                          thinking_effort=thinking_effort)
 
     @contextlib.asynccontextmanager
     async def stream(self, *, model, system, messages, tools,
-                     max_tokens, temperature=1.0) -> AsyncIterator:
+                     max_tokens, temperature=1.0,
+                     thinking_enabled=None, thinking_effort=None) -> AsyncIterator:
         resp = self._next(model=model, system=system, messages=messages,
                           tools=tools, max_tokens=max_tokens,
-                          temperature=temperature)
+                          temperature=temperature,
+                          thinking_enabled=thinking_enabled,
+                          thinking_effort=thinking_effort)
         yield _FakeStream(resp)
 
 

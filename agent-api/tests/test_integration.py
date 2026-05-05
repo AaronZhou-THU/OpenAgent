@@ -72,17 +72,23 @@ class ScriptedLLMClient:
         )
 
     async def create(self, *, model, system, messages, tools,
-                     max_tokens, temperature=1.0) -> LLMResponse:
+                     max_tokens, temperature=1.0,
+                     thinking_enabled=None, thinking_effort=None) -> LLMResponse:
         return self._next(model=model, system=system, messages=messages,
                           tools=tools, max_tokens=max_tokens,
-                          temperature=temperature)
+                          temperature=temperature,
+                          thinking_enabled=thinking_enabled,
+                          thinking_effort=thinking_effort)
 
     @contextlib.asynccontextmanager
     async def stream(self, *, model, system, messages, tools,
-                     max_tokens, temperature=1.0) -> AsyncIterator:
+                     max_tokens, temperature=1.0,
+                     thinking_enabled=None, thinking_effort=None) -> AsyncIterator:
         resp = self._next(model=model, system=system, messages=messages,
                           tools=tools, max_tokens=max_tokens,
-                          temperature=temperature)
+                          temperature=temperature,
+                          thinking_enabled=thinking_enabled,
+                          thinking_effort=thinking_effort)
         yield _FakeStream(resp)
 
 
@@ -224,6 +230,43 @@ class TestSimpleQA:
         assert "Hello" in text_deltas[0]["content"]
         # Only one LLM call
         assert len(llm.calls) == 1
+
+    async def test_thinking_event_emitted(self, tmp_path):
+        ws = tmp_path / "workspace"
+        ws.mkdir()
+        config = _make_settings(ws, thinking_enabled=True, thinking_effort="max")
+        llm = ScriptedLLMClient([
+            LLMResponse(
+                content=[
+                    {"type": "thinking", "thinking": "I should answer directly."},
+                    {"type": "text", "text": "Hello!"},
+                ],
+                tool_calls=[],
+                done=True,
+                input_tokens=100,
+                output_tokens=50,
+                stop_reason="end_turn",
+            )
+        ])
+        events = EventCollector()
+
+        messages = [{"role": "user", "content": "Hi"}]
+        await agent_loop(
+            messages=messages,
+            config=config,
+            llm=llm,
+            skill_loader=_make_skill_loader(ws),
+            todo=TodoManager(),
+            send_event=events,
+        )
+
+        thinking_events = events.of_type("thinking")
+        assert len(thinking_events) == 1
+        assert thinking_events[0]["content"] == "I should answer directly."
+        assert thinking_events[0]["effort"] == "max"
+        assert llm.calls[0]["thinking_enabled"] is True
+        assert llm.calls[0]["thinking_effort"] == "max"
+        assert messages[-1]["content"][0]["type"] == "thinking"
 
 
 class TestToolUseFlow:

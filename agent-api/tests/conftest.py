@@ -58,6 +58,8 @@ class MockLLMClient:
         tools: list[dict],
         max_tokens: int,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ) -> LLMResponse:
         self.calls.append(
             {
@@ -67,6 +69,8 @@ class MockLLMClient:
                 "tools": tools,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
+                "thinking_enabled": thinking_enabled,
+                "thinking_effort": thinking_effort,
             }
         )
         return self.response
@@ -81,6 +85,8 @@ class MockLLMClient:
         tools: list[dict],
         max_tokens: int,
         temperature: float = 1.0,
+        thinking_enabled: bool | None = None,
+        thinking_effort: str | None = None,
     ) -> AsyncIterator:
         self.calls.append(
             {
@@ -90,6 +96,8 @@ class MockLLMClient:
                 "tools": tools,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
+                "thinking_enabled": thinking_enabled,
+                "thinking_effort": thinking_effort,
             }
         )
         yield self  # not used in tests that only need create()

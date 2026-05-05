@@ -510,6 +510,63 @@ html, body {
   color: var(--text-secondary);
 }
 
+/* ===== Thinking Blocks ===== */
+.thinking-block {
+  margin: 10px 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  border-left: 3px solid var(--accent-purple);
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.thinking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-purple);
+}
+
+.thinking-header:hover {
+  background: var(--bg-hover);
+}
+
+.thinking-toggle {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.thinking-toggle.open {
+  transform: rotate(90deg);
+}
+
+.thinking-body {
+  display: none;
+  padding: 0 12px 10px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.thinking-body.open {
+  display: block;
+}
+
+.thinking-body pre {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-secondary);
+}
+
 /* Tool spinner */
 .tool-spinner {
   display: inline-block;
@@ -1204,6 +1261,25 @@ html, body {
   height: 16px;
   accent-color: var(--accent-blue);
   cursor: pointer;
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.select-option select {
+  min-width: 110px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
 }
 
 .toggle-label {

@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     teammate_temperature: float = 0.7  # teammates — balanced
     compact_temperature: float = 0.2  # compaction — deterministic summarization
 
+    # DeepSeek V4 / Anthropic-compatible thinking controls
+    thinking_enabled: bool = False
+    thinking_effort: str = "high"  # "high" or "max"
+
     # Context management
     context_window: int = 200_000  # model's context window size
     compact_threshold: float = 0.7  # compact when input_tokens > this × context_window

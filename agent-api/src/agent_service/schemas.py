@@ -17,6 +17,8 @@ class CreateChatRequest(BaseModel):
     enable_tracing: bool = False
     enable_approval: bool = False
     enable_plan_mode: bool = False
+    enable_thinking: bool | None = None
+    thinking_effort: str | None = None
 
 
 class CreateChatResponse(BaseModel):
@@ -41,6 +43,8 @@ class ConversationDetail(BaseModel):
     enable_tracing: bool = False
     enable_approval: bool = False
     enable_plan_mode: bool = False
+    enable_thinking: bool = False
+    thinking_effort: str = "high"
     created_at: datetime.datetime
     messages: list[MessageInfo]
     total_input_tokens: int

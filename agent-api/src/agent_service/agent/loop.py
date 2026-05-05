@@ -269,6 +269,18 @@ def _messages_to_summary_text(messages: list[dict]) -> str:
     return "\n".join(parts)[:20_000]
 
 
+def _extract_thinking_text(content: list[dict]) -> str:
+    parts: list[str] = []
+    for block in content:
+        if not isinstance(block, dict):
+            continue
+        if block.get("type") == "thinking":
+            text = block.get("thinking") or block.get("text") or ""
+            if text:
+                parts.append(str(text))
+    return "\n\n".join(parts)
+
+
 async def _compact_messages(
     messages: list[dict],
     llm: LLMClient,
@@ -344,6 +356,7 @@ async def _compact_messages(
             tools=[],
             max_tokens=1024,
             temperature=temperature,
+            thinking_enabled=False,
         )
         summary = ""
         for block in resp.content:
@@ -835,6 +848,8 @@ async def run_subagent(
             tools=tool_defs,
             max_tokens=config.max_output_tokens,
             temperature=config.subagent_temperature,
+            thinking_enabled=config.thinking_enabled,
+            thinking_effort=config.thinking_effort,
         )
 
         total_input += response.input_tokens
@@ -1110,6 +1125,8 @@ async def agent_loop(
                 tools=tool_defs,
                 max_tokens=config.max_output_tokens,
                 temperature=config.temperature,
+                thinking_enabled=config.thinking_enabled,
+                thinking_effort=config.thinking_effort,
             ) as stream:
                 async for text in stream:
                     await send_event({"type": "text_delta", "content": text})
@@ -1124,6 +1141,14 @@ async def agent_loop(
         last_input_tokens = response.input_tokens
         usage_tracker["input"] = total_input
         usage_tracker["output"] = total_output
+
+        thinking_text = _extract_thinking_text(response.content)
+        if thinking_text:
+            await send_event({
+                "type": "thinking",
+                "content": thinking_text,
+                "effort": config.thinking_effort,
+            })
 
         # Content is already dicts — append directly
         messages.append({"role": "assistant", "content": response.content})
@@ -1350,12 +1375,21 @@ async def agent_loop(
                     tools=[],  # no tools — force text-only response
                     max_tokens=config.max_output_tokens,
                     temperature=config.temperature,
+                    thinking_enabled=config.thinking_enabled,
+                    thinking_effort=config.thinking_effort,
                 ) as stream:
                     async for text in stream:
                         await send_event({
                             "type": "text_delta", "content": text,
                         })
                     final_resp = await stream.get_response()
+                thinking_text = _extract_thinking_text(final_resp.content)
+                if thinking_text:
+                    await send_event({
+                        "type": "thinking",
+                        "content": thinking_text,
+                        "effort": config.thinking_effort,
+                    })
                 total_input += final_resp.input_tokens
                 total_output += final_resp.output_tokens
                 messages.append({

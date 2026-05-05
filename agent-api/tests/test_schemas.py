@@ -27,6 +27,8 @@ def test_create_chat_request_defaults():
     assert req.enable_teams is False
     assert req.enable_tracing is False
     assert req.enable_approval is False
+    assert req.enable_thinking is None
+    assert req.thinking_effort is None
 
 
 def test_create_chat_request_all_fields():
@@ -36,12 +38,16 @@ def test_create_chat_request_all_fields():
         enable_teams=True,
         enable_tracing=True,
         enable_approval=True,
+        enable_thinking=True,
+        thinking_effort="max",
     )
     assert req.system_prompt == "You are helpful"
     assert req.preset == "coding"
     assert req.enable_teams is True
     assert req.enable_tracing is True
     assert req.enable_approval is True
+    assert req.enable_thinking is True
+    assert req.thinking_effort == "max"
 
 
 # ---------------------------------------------------------------------------

@@ -40,6 +40,11 @@ _prompt_loader: PromptLoader | None = None
 _tool_names: list[dict] | None = None
 
 
+def _normalize_thinking_effort(value: str | None) -> str:
+    value = (value or "high").strip().lower()
+    return "max" if value in {"max", "xhigh"} else "high"
+
+
 def set_settings(s: Settings) -> None:
     global _settings
     _settings = s
@@ -71,6 +76,8 @@ async def create_chat(
     _user: dict | None = Depends(get_current_user),
 ):
     conv_id = uuid.uuid4().hex[:12]
+    default_thinking = _settings.thinking_enabled if _settings else False
+    default_effort = _settings.thinking_effort if _settings else "high"
     conv = Conversation(
         id=conv_id,
         system_prompt=req.system_prompt,
@@ -79,6 +86,8 @@ async def create_chat(
         enable_tracing=req.enable_tracing,
         enable_approval=req.enable_approval,
         enable_plan_mode=req.enable_plan_mode,
+        enable_thinking=default_thinking if req.enable_thinking is None else req.enable_thinking,
+        thinking_effort=_normalize_thinking_effort(req.thinking_effort or default_effort),
     )
     session.add(conv)
     await session.commit()
@@ -154,6 +163,8 @@ async def get_conversation(
         enable_tracing=conv.enable_tracing,
         enable_approval=conv.enable_approval,
         enable_plan_mode=conv.enable_plan_mode,
+        enable_thinking=conv.enable_thinking,
+        thinking_effort=conv.thinking_effort or "high",
         created_at=conv.created_at,
         messages=[
             MessageInfo(role=m.role, content=m.content, created_at=m.created_at)
