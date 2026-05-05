@@ -485,6 +485,11 @@ Set environment variables in `agent-api/.env`:
 | `OPENAI_API_KEY` | (required for OpenAI) | Your OpenAI API key |
 | `OPENAI_BASE_URL` | unset | Optional OpenAI-compatible endpoint |
 | `MODEL` | `claude-sonnet-4-5-20250929` | Default model |
+| `SUBAGENT_MODEL` | unset | Optional model override for subagents |
+| `TEAMMATE_MODEL` | unset | Optional model override for teammate agents |
+| `COMPACT_MODEL` | unset | Optional model override for context compaction |
+| `THINKING_ENABLED` | `false` | Default provider thinking mode for new conversations |
+| `THINKING_EFFORT` | `high` | Default thinking effort (`high` or `max`) |
 | `WORKSPACE_DIR` | `workspace` | Workspace root for agent-created files and command execution |
 | `ENABLE_MEMORY` | `true` | Cross-session memory |
 | `MAX_TURNS` | `50` | Max agent loop iterations |
@@ -547,7 +552,17 @@ If you adopt that model, `WORKSPACE_DIR` still matters, but it becomes the mount
 LLM_PROVIDER=openai OPENAI_API_KEY=your-key MODEL=gpt-4.1
 
 # Anthropic-compatible endpoint
-ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
+LLM_PROVIDER=anthropic ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro
+
+# DeepSeek V4 with visible thinking output by default
+LLM_PROVIDER=anthropic \
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic \
+MODEL=deepseek-v4-pro \
+SUBAGENT_MODEL=deepseek-v4-flash \
+TEAMMATE_MODEL=deepseek-v4-flash \
+COMPACT_MODEL=deepseek-v4-flash \
+THINKING_ENABLED=true \
+THINKING_EFFORT=max
 
 # Any other compatible backend
 # Implement or extend the adapter layer in agent-api/src/agent_service/agent/llm.py

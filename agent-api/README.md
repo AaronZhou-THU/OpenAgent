@@ -217,7 +217,7 @@ In that model, `WORKSPACE_DIR` remains useful, but it becomes the mounted root *
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/health` | Health check |
-| `POST` | `/api/chat` | Create new conversation → `{conversation_id}`. Body: `{preset?, enable_teams?, enable_tracing?, enable_approval?}` |
+| `POST` | `/api/chat` | Create new conversation → `{conversation_id}`. Body: `{preset?, enable_teams?, enable_tracing?, enable_approval?, enable_plan_mode?, enable_thinking?, thinking_effort?}` |
 | `GET` | `/api/conversations` | List all conversations |
 | `GET` | `/api/conversations/{id}` | Get conversation history + token usage |
 | `DELETE` | `/api/conversations/{id}` | Delete a conversation |
@@ -246,6 +246,7 @@ Connect to `ws://host/api/chat/{conversation_id}/ws`
 | Event | Fields | Description |
 |-------|--------|-------------|
 | `text_delta` | `content` | Streamed text from the model |
+| `thinking` | `content`, `effort` | Provider thinking output for the current assistant turn |
 | `tool_call` | `tool`, `input` | Model is calling a tool |
 | `tool_result` | `tool`, `result` | Tool execution result |
 | `tool_approval_request` | `tools: [{name, input, id}]` | Waiting for user approval (when approval enabled) |
@@ -329,7 +330,11 @@ Connect to `ws://host/api/chat/{conversation_id}/ws`
 
 ### Per-Conversation Feature Flags
 
-Teams, tracing, and tool approval are opt-in per conversation via `enable_teams`, `enable_tracing`, and `enable_approval` booleans (default false). Set at creation time in `POST /api/chat`. The frontend new-conversation modal provides toggle switches for all three. When teams is disabled, no team infrastructure (MessageBus, ProtocolTracker, TeammateManager) is created and team tools are not registered.
+Teams, tracing, tool approval, plan mode, and provider thinking are configurable per conversation via `enable_teams`, `enable_tracing`, `enable_approval`, `enable_plan_mode`, `enable_thinking`, and `thinking_effort`. Set them at creation time in `POST /api/chat`. The developer frontend new-conversation modal provides toggle switches for these options plus a thinking-level selector. When teams is disabled, no team infrastructure (MessageBus, ProtocolTracker, TeammateManager) is created and team tools are not registered.
+
+### Provider Thinking Output
+
+DeepSeek V4 and compatible providers can return provider-level thinking output in addition to normal assistant text. OpenAgent passes `thinking` / `output_config.effort` for Anthropic-compatible providers and `extra_body.thinking` / `reasoning_effort` for OpenAI-compatible providers. Returned thinking is stored in assistant message content as `{"type": "thinking", "thinking": "..."}`, emitted over WebSocket as a `thinking` event, and rendered in the developer UI as a collapsed "Thinking" block. `THINKING_ENABLED` and `THINKING_EFFORT` set the defaults for new conversations; `enable_thinking` and `thinking_effort` override them per conversation.
 
 ### Tool Approval
 
@@ -466,6 +471,11 @@ All settings via environment variables or `.env`:
 | `OPENAI_API_KEY` | — | Required for `openai` |
 | `OPENAI_BASE_URL` | — | Optional OpenAI-compatible base URL |
 | `MODEL` | `claude-sonnet-4-5-20250929` | Model to use |
+| `SUBAGENT_MODEL` | — | Optional model override for subagents |
+| `TEAMMATE_MODEL` | — | Optional model override for teammate agents |
+| `COMPACT_MODEL` | — | Optional model override for context compaction |
+| `THINKING_ENABLED` | `false` | Default provider thinking mode for new conversations |
+| `THINKING_EFFORT` | `high` | Default thinking effort (`high` or `max`) |
 | `MAX_TURNS` | `50` | Max agent loop iterations |
 | `MAX_TOKEN_BUDGET` | `200000` | Total token budget per request |
 | `MAX_OUTPUT_TOKENS` | `16384` | Max tokens per model response |

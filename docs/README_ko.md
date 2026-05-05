@@ -276,6 +276,11 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 | `OPENAI_API_KEY` | (OpenAI 사용 시 필수) | OpenAI API 키 |
 | `OPENAI_BASE_URL` | 미설정 | 선택적 OpenAI 호환 엔드포인트 |
 | `MODEL` | `claude-sonnet-4-5-20250929` | 기본 모델 |
+| `SUBAGENT_MODEL` | 미설정 | 하위 에이전트용 선택적 모델 오버라이드 |
+| `TEAMMATE_MODEL` | 미설정 | 팀메이트 에이전트용 선택적 모델 오버라이드 |
+| `COMPACT_MODEL` | 미설정 | 컨텍스트 압축용 선택적 모델 오버라이드 |
+| `THINKING_ENABLED` | `false` | 새 대화의 기본 모델 thinking 모드 |
+| `THINKING_EFFORT` | `high` | 기본 thinking 강도 (`high` 또는 `max`) |
 | `WORKSPACE_DIR` | `workspace` | 에이전트가 파일을 생성하는 위치 |
 | `ENABLE_MEMORY` | `true` | 세션 간 메모리 |
 | `MAX_TURNS` | `50` | 에이전트 루프 최대 반복 횟수 |
@@ -289,7 +294,10 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 LLM_PROVIDER=openai OPENAI_API_KEY=당신의키 MODEL=gpt-4.1
 
 # Anthropic 호환 엔드포인트
-ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro
+
+# DeepSeek V4, thinking 출력을 기본으로 표시
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro SUBAGENT_MODEL=deepseek-v4-flash THINKING_ENABLED=true THINKING_EFFORT=max
 
 # 기타 호환 백엔드
 # agent-api/src/agent_service/agent/llm.py 에서 어댑터 계층을 구현하거나 확장

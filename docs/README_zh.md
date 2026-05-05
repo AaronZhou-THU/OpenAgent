@@ -276,6 +276,11 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 | `OPENAI_API_KEY` | （OpenAI 必需） | 你的 OpenAI API 密钥 |
 | `OPENAI_BASE_URL` | 未设置 | 可选的 OpenAI 兼容端点 |
 | `MODEL` | `claude-sonnet-4-5-20250929` | 默认模型 |
+| `SUBAGENT_MODEL` | 未设置 | 子代理的可选模型覆盖 |
+| `TEAMMATE_MODEL` | 未设置 | 队友代理的可选模型覆盖 |
+| `COMPACT_MODEL` | 未设置 | 上下文压缩的可选模型覆盖 |
+| `THINKING_ENABLED` | `false` | 新会话默认是否启用模型思考输出 |
+| `THINKING_EFFORT` | `high` | 默认思考强度（`high` 或 `max`） |
 | `WORKSPACE_DIR` | `workspace` | 代理文件创建位置 |
 | `ENABLE_MEMORY` | `true` | 跨会话记忆 |
 | `MAX_TURNS` | `50` | 代理循环最大迭代次数 |
@@ -289,7 +294,10 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 LLM_PROVIDER=openai OPENAI_API_KEY=你的密钥 MODEL=gpt-4.1
 
 # Anthropic 兼容端点
-ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro
+
+# DeepSeek V4，并默认显示思考输出
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro SUBAGENT_MODEL=deepseek-v4-flash THINKING_ENABLED=true THINKING_EFFORT=max
 
 # 其他兼容后端
 # 在 agent-api/src/agent_service/agent/llm.py 中实现或扩展适配层

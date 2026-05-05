@@ -276,6 +276,11 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 | `OPENAI_API_KEY` | （OpenAIで必須） | OpenAI APIキー |
 | `OPENAI_BASE_URL` | 未設定 | 任意のOpenAI互換エンドポイント |
 | `MODEL` | `claude-sonnet-4-5-20250929` | デフォルトモデル |
+| `SUBAGENT_MODEL` | 未設定 | サブエージェント用の任意モデル上書き |
+| `TEAMMATE_MODEL` | 未設定 | チームメイトエージェント用の任意モデル上書き |
+| `COMPACT_MODEL` | 未設定 | コンテキスト圧縮用の任意モデル上書き |
+| `THINKING_ENABLED` | `false` | 新規会話のデフォルト思考モード |
+| `THINKING_EFFORT` | `high` | デフォルト思考強度（`high` または `max`） |
 | `WORKSPACE_DIR` | `workspace` | エージェントがファイルを作成する場所 |
 | `ENABLE_MEMORY` | `true` | セッション間メモリ |
 | `MAX_TURNS` | `50` | エージェントループの最大反復回数 |
@@ -289,7 +294,10 @@ cd agent-cli && .venv/bin/ruff check src/ tests/
 LLM_PROVIDER=openai OPENAI_API_KEY=あなたのキー MODEL=gpt-4.1
 
 # Anthropic互換エンドポイント
-ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro
+
+# DeepSeek V4（思考出力をデフォルトで表示）
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro SUBAGENT_MODEL=deepseek-v4-flash THINKING_ENABLED=true THINKING_EFFORT=max
 
 # その他の互換バックエンド
 # agent-api/src/agent_service/agent/llm.py のアダプター層を実装または拡張

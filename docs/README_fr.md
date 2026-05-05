@@ -277,6 +277,11 @@ Variables d'environnement à définir dans `agent-api/.env` :
 | `OPENAI_API_KEY` | (requis pour OpenAI) | Votre clé API OpenAI |
 | `OPENAI_BASE_URL` | non défini | Endpoint optionnel compatible OpenAI |
 | `MODEL` | `claude-sonnet-4-5-20250929` | Modèle par défaut |
+| `SUBAGENT_MODEL` | non défini | Modèle optionnel pour les sous-agents |
+| `TEAMMATE_MODEL` | non défini | Modèle optionnel pour les agents coéquipiers |
+| `COMPACT_MODEL` | non défini | Modèle optionnel pour la compaction du contexte |
+| `THINKING_ENABLED` | `false` | Mode de pensée par défaut pour les nouvelles conversations |
+| `THINKING_EFFORT` | `high` | Effort de pensée par défaut (`high` ou `max`) |
 | `WORKSPACE_DIR` | `workspace` | Répertoire de création des fichiers de l'agent |
 | `ENABLE_MEMORY` | `true` | Mémoire inter-sessions |
 | `MAX_TURNS` | `50` | Nombre max d'itérations de la boucle agent |
@@ -290,7 +295,10 @@ Variables d'environnement à définir dans `agent-api/.env` :
 LLM_PROVIDER=openai OPENAI_API_KEY=votre-clé MODEL=gpt-4.1
 
 # Endpoint compatible Anthropic
-ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-chat
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro
+
+# DeepSeek V4 avec sortie de pensée visible par défaut
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic MODEL=deepseek-v4-pro SUBAGENT_MODEL=deepseek-v4-flash THINKING_ENABLED=true THINKING_EFFORT=max
 
 # Tout autre backend compatible
 # Implémentez ou étendez la couche d'adaptation dans agent-api/src/agent_service/agent/llm.py
