@@ -83,6 +83,8 @@ OpenAgent は PyPI にも公開されています。
 - [`openagent-core`](https://pypi.org/project/openagent-core/) — バックエンドライブラリ
 - [`openagent-app`](https://pypi.org/project/openagent-app/) — ターミナルCLI
 
+現在の公開バージョン: **0.1.1**。
+
 モノレポをクローンせず、配布済みCLIだけ使いたい場合:
 
 ```bash

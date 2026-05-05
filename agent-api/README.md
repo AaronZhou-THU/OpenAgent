@@ -16,11 +16,13 @@ The Python package split in this repository is:
 - [`openagent-core`](https://pypi.org/project/openagent-core/) — backend library
 - [`openagent-app`](https://pypi.org/project/openagent-app/) — terminal CLI
 
+Current published release: **0.1.1**.
+
 Install from PyPI when you only need the packaged artifacts:
 
 ```bash
-pip install openagent-core
-pip install openagent-app
+pip install openagent-core==0.1.1
+pip install openagent-app==0.1.1
 ```
 
 ---

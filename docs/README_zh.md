@@ -83,6 +83,8 @@ OpenAgent 也已经发布到 PyPI：
 - [`openagent-core`](https://pypi.org/project/openagent-core/) — 后端库
 - [`openagent-app`](https://pypi.org/project/openagent-app/) — 终端 CLI
 
+当前发布版本：**0.1.1**。
+
 如果你只想直接安装打包好的 CLI，而不是克隆整个 monorepo：
 
 ```bash

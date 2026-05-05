@@ -105,11 +105,19 @@ OpenAgent is also published on PyPI:
 - [`openagent-core`](https://pypi.org/project/openagent-core/) — backend library
 - [`openagent-app`](https://pypi.org/project/openagent-app/) — terminal CLI
 
-If you only want the packaged CLI instead of a monorepo checkout:
+Current published release: **0.1.1**.
+
+If you only want the packaged CLI instead of a monorepo checkout, install from PyPI:
 
 ```bash
 pip install openagent-app
 openagent
+```
+
+For a pinned install:
+
+```bash
+pip install openagent-app==0.1.1
 ```
 
 ### Option 1a: Developer Web UI

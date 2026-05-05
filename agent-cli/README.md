@@ -2,6 +2,15 @@
 
 Terminal interface for OpenAgent.
 
+Install from PyPI:
+
+```bash
+pip install openagent-app
+openagent --version
+```
+
+Current published release: **0.1.1**.
+
 Provider thinking can be enabled per run:
 
 ```bash
