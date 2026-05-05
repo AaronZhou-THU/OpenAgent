@@ -40,6 +40,16 @@ class TestBuildParserDefaults:
         args = parser.parse_args([])
         assert args.max_turns is None
 
+    def test_default_thinking(self):
+        parser = _build_parser()
+        args = parser.parse_args([])
+        assert args.thinking is None
+
+    def test_default_thinking_effort(self):
+        parser = _build_parser()
+        args = parser.parse_args([])
+        assert args.thinking_effort is None
+
 
 class TestBuildParserLongFlags:
     """Verify long-form flags set values correctly."""
@@ -74,6 +84,21 @@ class TestBuildParserLongFlags:
         args = parser.parse_args(["--max-turns", "10"])
         assert args.max_turns == 10
 
+    def test_thinking_long(self):
+        parser = _build_parser()
+        args = parser.parse_args(["--thinking"])
+        assert args.thinking is True
+
+    def test_no_thinking_long(self):
+        parser = _build_parser()
+        args = parser.parse_args(["--no-thinking"])
+        assert args.thinking is False
+
+    def test_thinking_effort_long(self):
+        parser = _build_parser()
+        args = parser.parse_args(["--thinking-effort", "max"])
+        assert args.thinking_effort == "max"
+
 
 class TestBuildParserShortFlags:
     """Verify short-form flags (-p, -w, -m) work."""
@@ -106,6 +131,8 @@ class TestBuildParserCombined:
             "--no-memory",
             "--no-approval",
             "--max-turns", "10",
+            "--thinking",
+            "--thinking-effort", "max",
         ])
         assert args.preset == "work"
         assert args.workspace == "/tmp"
@@ -113,6 +140,8 @@ class TestBuildParserCombined:
         assert args.no_memory is True
         assert args.no_approval is True
         assert args.max_turns == 10
+        assert args.thinking is True
+        assert args.thinking_effort == "max"
 
     def test_short_and_long_mixed(self):
         parser = _build_parser()

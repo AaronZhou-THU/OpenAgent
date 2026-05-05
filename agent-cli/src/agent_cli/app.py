@@ -118,6 +118,14 @@ async def run_repl(args) -> None:
         settings.model = cli_config.model
     if args.max_turns:
         settings.max_turns = args.max_turns
+    if getattr(args, "thinking", None) is not None:
+        settings.thinking_enabled = bool(args.thinking)
+    elif cli_config.thinking_enabled is not None:
+        settings.thinking_enabled = cli_config.thinking_enabled
+    if getattr(args, "thinking_effort", None):
+        settings.thinking_effort = args.thinking_effort
+    elif cli_config.thinking_effort:
+        settings.thinking_effort = cli_config.thinking_effort
 
     preset = args.preset or cli_config.preset
 
@@ -304,11 +312,17 @@ async def run_repl(args) -> None:
     # ---- Banner ----
     teams_label = "[bold green]on[/bold green]" if args.teams else "[dim]off[/dim]"
     plan_label = "[bold bright_cyan]on[/bold bright_cyan]" if plan_mode_active else "[dim]off[/dim]"
+    thinking_label = (
+        f"[bold bright_black]on[/bold bright_black] [dim]({settings.thinking_effort})[/dim]"
+        if settings.thinking_enabled
+        else "[dim]off[/dim]"
+    )
     info = (
         f"[bright_black]Model[/bright_black]      [bold]{settings.model}[/bold]\n"
         f"[bright_black]Preset[/bright_black]     [bold]{preset}[/bold]\n"
         f"[bright_black]Teams[/bright_black]      {teams_label}\n"
         f"[bright_black]Plan Mode[/bright_black]  {plan_label}\n"
+        f"[bright_black]Thinking[/bright_black]   {thinking_label}\n"
         f"[bright_black]Session[/bright_black]    [dim]{session_meta.id}[/dim]\n"
         f"[bright_black]Workspace[/bright_black]  {workspace}\n\n"
         f"[bright_black]Ctrl+D to quit \u00b7 Ctrl+C to interrupt \u00b7 /help for commands[/bright_black]"

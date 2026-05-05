@@ -221,6 +221,9 @@ def make_send_event(
     elapsed_text: ElapsedText | None = None
     _turn_start: float | None = None
     _subagent_count: int = 0
+    _provider_thinking: list[str] = []
+    _provider_thinking_effort = ""
+    _provider_thinking_rendered = False
 
     def _stop_spinner():
         nonlocal spinner, elapsed_text
@@ -244,19 +247,55 @@ def make_send_event(
         if elapsed_text is not None:
             elapsed_text.message = message
 
+    def _flush_provider_thinking():
+        nonlocal _provider_thinking_rendered
+        if _provider_thinking_rendered:
+            return
+        text = "".join(_provider_thinking).rstrip()
+        if not text:
+            return
+        _stop_spinner()
+        label = "Thinking"
+        if _provider_thinking_effort:
+            label = f"{label} · {_provider_thinking_effort}"
+        console.print(f"\n  [bright_black]{escape(label)}[/bright_black]")
+        console.print(Text(text, style="dim"))
+        _provider_thinking_rendered = True
+
     async def send_event(event: dict[str, Any]) -> None:
         global _streaming
         nonlocal spinner, _turn_start, _subagent_count
+        nonlocal _provider_thinking_effort, _provider_thinking_rendered
         etype = event.get("type", "")
 
         # ── Thinking spinner ──
         if etype == "thinking":
+            content = event.get("content", "")
+            if content:
+                _provider_thinking.append(str(content))
+                _provider_thinking_effort = event.get("effort", "") or _provider_thinking_effort
+                _flush_provider_thinking()
+                return
+
             _turn_start = None  # reset for new turn
             _start_spinner("Thinking")
             return
 
+        # ── Provider thinking stream ──
+        if etype == "thinking_delta":
+            content = event.get("content", "")
+            if content:
+                _provider_thinking.append(str(content))
+                _provider_thinking_effort = event.get("effort", "") or _provider_thinking_effort
+                if spinner is not None:
+                    _update_spinner_message("Thinking")
+                else:
+                    _start_spinner("Thinking")
+            return
+
         # ── Streaming text ──
         if etype == "text_delta":
+            _flush_provider_thinking()
             if spinner is not None:
                 _update_spinner_message("Generating")
             else:
@@ -266,6 +305,7 @@ def make_send_event(
             return
 
         # Finish any streaming + stop spinner before block events
+        _flush_provider_thinking()
         _stop_spinner()
         renderer.finish()
         _end_stream()
@@ -519,6 +559,9 @@ def make_send_event(
         if etype == "done":
             _turn_start = None
             _subagent_count = 0
+            _provider_thinking.clear()
+            _provider_thinking_effort = ""
+            _provider_thinking_rendered = False
             renderer.reset()
 
     return send_event

@@ -16,6 +16,8 @@ class CLIConfig:
     preset: str = "coding"
     approval: bool = True
     vi_mode: bool = False
+    thinking_enabled: bool | None = None
+    thinking_effort: str | None = None
 
     @property
     def history_file(self) -> Path:
@@ -51,6 +53,10 @@ def load_config(path: Path | None = None) -> CLIConfig:
         cfg.approval = bool(data["approval"])
     if "vi_mode" in data:
         cfg.vi_mode = bool(data["vi_mode"])
+    if "thinking_enabled" in data:
+        cfg.thinking_enabled = bool(data["thinking_enabled"])
+    if "thinking_effort" in data:
+        cfg.thinking_effort = str(data["thinking_effort"])
 
     return cfg
 

@@ -606,6 +606,35 @@ class TestSendEventThinking:
             # ElapsedText message should be updated to "Generating"
             assert et.message == "Generating"
 
+    async def test_thinking_delta_renders_before_text(self):
+        renderer_mod._streaming = False
+        send = make_send_event()
+        with patch("agent_cli.renderer.Status"), \
+             patch("agent_cli.renderer.console") as mock_console:
+            await send({"type": "thinking_delta", "content": "reasoning", "effort": "max"})
+            assert mock_console.print.call_count == 0
+
+            await send({"type": "text_delta", "content": "answer"})
+
+            calls = mock_console.print.call_args_list
+            assert "Thinking" in calls[0][0][0]
+            assert "max" in calls[0][0][0]
+            from rich.text import Text as RichText
+            assert isinstance(calls[1][0][0], RichText)
+            assert str(calls[1][0][0]) == "reasoning"
+
+    async def test_final_thinking_with_content_renders_provider_output(self):
+        renderer_mod._streaming = False
+        send = make_send_event()
+        with patch("agent_cli.renderer.Status"), \
+             patch("agent_cli.renderer.console") as mock_console:
+            await send({"type": "thinking", "content": "final reasoning", "effort": "high"})
+
+            calls = mock_console.print.call_args_list
+            assert "Thinking" in calls[0][0][0]
+            assert "high" in calls[0][0][0]
+            assert str(calls[1][0][0]) == "final reasoning"
+
 
 class TestSendEventTeamsChanged:
     """teams_changed events."""

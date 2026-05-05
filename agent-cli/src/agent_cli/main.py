@@ -53,6 +53,26 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Start in plan mode (read-only exploration, then execute after approval)",
     )
+    thinking_group = p.add_mutually_exclusive_group()
+    thinking_group.add_argument(
+        "--thinking",
+        dest="thinking",
+        action="store_true",
+        default=None,
+        help="Enable provider thinking output for this session",
+    )
+    thinking_group.add_argument(
+        "--no-thinking",
+        dest="thinking",
+        action="store_false",
+        help="Disable provider thinking output for this session",
+    )
+    p.add_argument(
+        "--thinking-effort",
+        choices=("high", "max"),
+        default=None,
+        help="Provider thinking effort level (high or max)",
+    )
     p.add_argument(
         "--resume",
         nargs="?",

@@ -183,6 +183,12 @@ openagent
 echo "Explain how binary search works" | openagent --no-approval
 ```
 
+Provider thinking can be shown in the terminal before replies:
+
+```bash
+openagent --thinking --thinking-effort max
+```
+
 ## Features
 
 ### Core
@@ -215,7 +221,7 @@ echo "Explain how binary search works" | openagent --no-approval
 | **Developer UI** | Dark-themed chat interface with markdown, syntax highlighting, file browser, dev panel |
 | **User UI** | Light-themed (Forest Canopy) user-facing interface with activity indicators, simplified dialogs |
 | **Chinese UIs** | Fully translated Chinese versions of both Developer UI and User UI (`agent-ui-cn/`, `agent-user-ui-cn/`) |
-| **Terminal CLI** | Rich REPL with history, autocomplete, vi mode, session persistence |
+| **Terminal CLI** | Rich REPL with history, autocomplete, vi mode, session persistence, provider thinking display |
 | **Google Auth** | Optional Google Sign-In for both Developer UI and User UI — enable via `GOOGLE_CLIENT_ID` |
 | **Dev panel** | Raw WebSocket frame inspector in the browser |
 | **LLM tracing** | See exact prompts and responses sent to the model |

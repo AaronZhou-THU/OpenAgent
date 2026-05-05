@@ -32,6 +32,14 @@ class TestCLIConfigDefaults:
         cfg = CLIConfig()
         assert cfg.vi_mode is False
 
+    def test_default_thinking_enabled(self):
+        cfg = CLIConfig()
+        assert cfg.thinking_enabled is None
+
+    def test_default_thinking_effort(self):
+        cfg = CLIConfig()
+        assert cfg.thinking_effort is None
+
     def test_history_file_property(self):
         cfg = CLIConfig()
         assert cfg.history_file == cfg.agent_dir / "history"
@@ -56,12 +64,16 @@ class TestLoadConfig:
             'preset = "work"\n'
             "approval = false\n"
             "vi_mode = true\n"
+            "thinking_enabled = true\n"
+            'thinking_effort = "max"\n'
         )
         cfg = load_config(config_file)
         assert cfg.model == "claude-haiku-4-5-20251001"
         assert cfg.preset == "work"
         assert cfg.approval is False
         assert cfg.vi_mode is True
+        assert cfg.thinking_enabled is True
+        assert cfg.thinking_effort == "max"
 
     def test_partial_toml(self, tmp_path):
         config_file = tmp_path / "config.toml"
